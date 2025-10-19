@@ -436,7 +436,9 @@ def reset_password_confirm(request, uidb64, token):
                 myuser.set_password(password1)
                 myuser.save()
                 messages.success(request, "Mật khẩu đã được thay đổi thành công.")
-                return redirect(next_url)
+                if next_url and next_url != '':
+                    return redirect(next_url)
+                return redirect('main')
             else:
                 messages.error(request, "Mật khẩu không hợp lệ hoặc không khớp. Vui lòng thử lại.")
         
@@ -496,6 +498,7 @@ def reset_password_confirm(request, uidb64, token):
             "categories": categories, # type: ignore
             "products": page_obj,
             "next": next_url,
+            "next_url": next_url,  # For form hidden field
             "search_query": search_query,
             "searched": search_query,  # For template compatibility with search page
             "sort_by": sort_by,
