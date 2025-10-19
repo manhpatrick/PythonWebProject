@@ -1,0 +1,374 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% if address %}Chỉnh sửa địa chỉ{% else %}Thêm địa chỉ mới{% endif %} - SportClothes</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/profile.css' %}">
+</head>
+<body>
+    <!-- Messages Display -->
+    {% include 'partials/messages.html' %}
+    
+    <!-- Header -->
+    <div class="header">
+        <div class="header-top">
+            <div class="header-links">
+                <a href="{% url 'main' %}"><i class="fas fa-home"></i> Trang chủ</a>
+                <a href="{% url 'profile' %}"><i class="fas fa-user"></i> Trang cá nhân</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="container" style="max-width: 800px; margin: 2rem auto; padding: 0 1rem;">
+        <!-- Breadcrumb -->
+        <div style="margin-bottom: 2rem;">
+            <a href="{% url 'profile' %}#address" style="color: #666; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; transition: color 0.3s;">
+                <i class="fas fa-arrow-left"></i> Quay lại
+            </a>
+        </div>
+
+        <!-- Form Card -->
+        <div class="address-form-card">
+            <div class="form-header">
+                <i class="fas fa-{% if address %}edit{% else %}plus-circle{% endif %}"></i>
+                <h2>{% if address %}Chỉnh sửa địa chỉ{% else %}Thêm địa chỉ mới{% endif %}</h2>
+            </div>
+            
+            <form method="POST" class="address-form">
+                {% csrf_token %}
+                
+                <!-- Số nhà, đường -->
+                <div class="form-group">
+                    <label>
+                        <i class="fas fa-road"></i> Số nhà, tên đường <span class="required">*</span>
+                    </label>
+                    <input type="text" 
+                        name="street" 
+                        value="{% if address %}{{ address.street }}{% endif %}" 
+                        placeholder="Ví dụ: Số 123, Đường Giải Phóng"
+                        required>
+                </div>
+
+                <!-- Phường/Xã & Quận/Huyện -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>
+                            <i class="fas fa-map-pin"></i> Phường/Xã <span class="required">*</span>
+                        </label>
+                        <input type="text" 
+                            name="ward" 
+                            value="{% if address %}{{ address.ward }}{% endif %}"
+                            placeholder="Ví dụ: Phường Bách Khoa"
+                            required>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <i class="fas fa-building"></i> Quận/Huyện <span class="required">*</span>
+                        </label>
+                        <input type="text" 
+                            name="district" 
+                            value="{% if address %}{{ address.district }}{% endif %}"
+                            placeholder="Ví dụ: Hai Bà Trưng"
+                            required>
+                    </div>
+                </div>
+
+                <!-- Tỉnh/Thành phố -->
+                <div class="form-group">
+                    <label>
+                        <i class="fas fa-city"></i> Tỉnh/Thành phố <span class="required">*</span>
+                    </label>
+                    <select name="city" required>
+                        <option value="">-- Chọn Tỉnh/Thành phố --</option>
+                        <option value="Hà Nội" {% if address and address.city == "Hà Nội" %}selected{% endif %}>Hà Nội</option>
+                        <option value="Hồ Chí Minh" {% if address and address.city == "Hồ Chí Minh" %}selected{% endif %}>Hồ Chí Minh</option>
+                        <option value="Đà Nẵng" {% if address and address.city == "Đà Nẵng" %}selected{% endif %}>Đà Nẵng</option>
+                        <option value="Hải Phòng" {% if address and address.city == "Hải Phòng" %}selected{% endif %}>Hải Phòng</option>
+                        <option value="Cần Thơ" {% if address and address.city == "Cần Thơ" %}selected{% endif %}>Cần Thơ</option>
+                        <option value="An Giang" {% if address and address.city == "An Giang" %}selected{% endif %}>An Giang</option>
+                        <option value="Bà Rịa-Vũng Tàu" {% if address and address.city == "Bà Rịa-Vũng Tàu" %}selected{% endif %}>Bà Rịa-Vũng Tàu</option>
+                        <option value="Bắc Giang" {% if address and address.city == "Bắc Giang" %}selected{% endif %}>Bắc Giang</option>
+                        <option value="Bắc Kạn" {% if address and address.city == "Bắc Kạn" %}selected{% endif %}>Bắc Kạn</option>
+                        <option value="Bạc Liêu" {% if address and address.city == "Bạc Liêu" %}selected{% endif %}>Bạc Liêu</option>
+                        <option value="Bắc Ninh" {% if address and address.city == "Bắc Ninh" %}selected{% endif %}>Bắc Ninh</option>
+                        <option value="Bến Tre" {% if address and address.city == "Bến Tre" %}selected{% endif %}>Bến Tre</option>
+                        <option value="Bình Định" {% if address and address.city == "Bình Định" %}selected{% endif %}>Bình Định</option>
+                        <option value="Bình Dương" {% if address and address.city == "Bình Dương" %}selected{% endif %}>Bình Dương</option>
+                        <option value="Bình Phước" {% if address and address.city == "Bình Phước" %}selected{% endif %}>Bình Phước</option>
+                        <option value="Bình Thuận" {% if address and address.city == "Bình Thuận" %}selected{% endif %}>Bình Thuận</option>
+                        <option value="Cà Mau" {% if address and address.city == "Cà Mau" %}selected{% endif %}>Cà Mau</option>
+                        <option value="Cao Bằng" {% if address and address.city == "Cao Bằng" %}selected{% endif %}>Cao Bằng</option>
+                        <option value="Đắk Lắk" {% if address and address.city == "Đắk Lắk" %}selected{% endif %}>Đắk Lắk</option>
+                        <option value="Đắk Nông" {% if address and address.city == "Đắk Nông" %}selected{% endif %}>Đắk Nông</option>
+                        <option value="Điện Biên" {% if address and address.city == "Điện Biên" %}selected{% endif %}>Điện Biên</option>
+                        <option value="Đồng Nai" {% if address and address.city == "Đồng Nai" %}selected{% endif %}>Đồng Nai</option>
+                        <option value="Đồng Tháp" {% if address and address.city == "Đồng Tháp" %}selected{% endif %}>Đồng Tháp</option>
+                        <option value="Gia Lai" {% if address and address.city == "Gia Lai" %}selected{% endif %}>Gia Lai</option>
+                        <option value="Hà Giang" {% if address and address.city == "Hà Giang" %}selected{% endif %}>Hà Giang</option>
+                        <option value="Hà Nam" {% if address and address.city == "Hà Nam" %}selected{% endif %}>Hà Nam</option>
+                        <option value="Hà Tĩnh" {% if address and address.city == "Hà Tĩnh" %}selected{% endif %}>Hà Tĩnh</option>
+                        <option value="Hải Dương" {% if address and address.city == "Hải Dương" %}selected{% endif %}>Hải Dương</option>
+                        <option value="Hậu Giang" {% if address and address.city == "Hậu Giang" %}selected{% endif %}>Hậu Giang</option>
+                        <option value="Hòa Bình" {% if address and address.city == "Hòa Bình" %}selected{% endif %}>Hòa Bình</option>
+                        <option value="Hưng Yên" {% if address and address.city == "Hưng Yên" %}selected{% endif %}>Hưng Yên</option>
+                        <option value="Khánh Hòa" {% if address and address.city == "Khánh Hòa" %}selected{% endif %}>Khánh Hòa</option>
+                        <option value="Kiên Giang" {% if address and address.city == "Kiên Giang" %}selected{% endif %}>Kiên Giang</option>
+                        <option value="Kon Tum" {% if address and address.city == "Kon Tum" %}selected{% endif %}>Kon Tum</option>
+                        <option value="Lai Châu" {% if address and address.city == "Lai Châu" %}selected{% endif %}>Lai Châu</option>
+                        <option value="Lâm Đồng" {% if address and address.city == "Lâm Đồng" %}selected{% endif %}>Lâm Đồng</option>
+                        <option value="Lạng Sơn" {% if address and address.city == "Lạng Sơn" %}selected{% endif %}>Lạng Sơn</option>
+                        <option value="Lào Cai" {% if address and address.city == "Lào Cai" %}selected{% endif %}>Lào Cai</option>
+                        <option value="Long An" {% if address and address.city == "Long An" %}selected{% endif %}>Long An</option>
+                        <option value="Nam Định" {% if address and address.city == "Nam Định" %}selected{% endif %}>Nam Định</option>
+                        <option value="Nghệ An" {% if address and address.city == "Nghệ An" %}selected{% endif %}>Nghệ An</option>
+                        <option value="Ninh Bình" {% if address and address.city == "Ninh Bình" %}selected{% endif %}>Ninh Bình</option>
+                        <option value="Ninh Thuận" {% if address and address.city == "Ninh Thuận" %}selected{% endif %}>Ninh Thuận</option>
+                        <option value="Phú Thọ" {% if address and address.city == "Phú Thọ" %}selected{% endif %}>Phú Thọ</option>
+                        <option value="Quảng Bình" {% if address and address.city == "Quảng Bình" %}selected{% endif %}>Quảng Bình</option>
+                        <option value="Quảng Nam" {% if address and address.city == "Quảng Nam" %}selected{% endif %}>Quảng Nam</option>
+                        <option value="Quảng Ngãi" {% if address and address.city == "Quảng Ngãi" %}selected{% endif %}>Quảng Ngãi</option>
+                        <option value="Quảng Ninh" {% if address and address.city == "Quảng Ninh" %}selected{% endif %}>Quảng Ninh</option>
+                        <option value="Quảng Trị" {% if address and address.city == "Quảng Trị" %}selected{% endif %}>Quảng Trị</option>
+                        <option value="Sóc Trăng" {% if address and address.city == "Sóc Trăng" %}selected{% endif %}>Sóc Trăng</option>
+                        <option value="Sơn La" {% if address and address.city == "Sơn La" %}selected{% endif %}>Sơn La</option>
+                        <option value="Tây Ninh" {% if address and address.city == "Tây Ninh" %}selected{% endif %}>Tây Ninh</option>
+                        <option value="Thái Bình" {% if address and address.city == "Thái Bình" %}selected{% endif %}>Thái Bình</option>
+                        <option value="Thái Nguyên" {% if address and address.city == "Thái Nguyên" %}selected{% endif %}>Thái Nguyên</option>
+                        <option value="Thanh Hóa" {% if address and address.city == "Thanh Hóa" %}selected{% endif %}>Thanh Hóa</option>
+                        <option value="Thừa Thiên Huế" {% if address and address.city == "Thừa Thiên Huế" %}selected{% endif %}>Thừa Thiên Huế</option>
+                        <option value="Tiền Giang" {% if address and address.city == "Tiền Giang" %}selected{% endif %}>Tiền Giang</option>
+                        <option value="Trà Vinh" {% if address and address.city == "Trà Vinh" %}selected{% endif %}>Trà Vinh</option>
+                        <option value="Tuyên Quang" {% if address and address.city == "Tuyên Quang" %}selected{% endif %}>Tuyên Quang</option>
+                        <option value="Vĩnh Long" {% if address and address.city == "Vĩnh Long" %}selected{% endif %}>Vĩnh Long</option>
+                        <option value="Vĩnh Phúc" {% if address and address.city == "Vĩnh Phúc" %}selected{% endif %}>Vĩnh Phúc</option>
+                        <option value="Yên Bái" {% if address and address.city == "Yên Bái" %}selected{% endif %}>Yên Bái</option>
+                    </select>
+                </div>
+
+                <!-- Địa chỉ mặc định -->
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" 
+                            name="is_default" 
+                            {% if address and address.is_default %}checked{% endif %}>
+                        <span class="checkbox-custom"></span>
+                        <span class="checkbox-text">
+                            <i class="fas fa-star"></i>
+                            Đặt làm địa chỉ mặc định
+                        </span>
+                    </label>
+                </div>
+
+                <!-- Buttons -->
+                <div class="form-actions">
+                    <a href="{% url 'profile' %}#address" class="btn btn-secondary">
+                        <i class="fas fa-times"></i>
+                        Hủy
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-check-circle"></i>
+                        {% if address %}Cập nhật{% else %}Lưu địa chỉ{% endif %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <style>
+        /* Address Form Card */
+        .address-form-card {
+            background: white;
+            border-radius: 12px;
+            padding: 2.5rem;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.08);
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .form-header {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .form-header i {
+            font-size: 1.8rem;
+            color: #ff6b35;
+        }
+
+        .form-header h2 {
+            color: #333;
+            font-size: 1.5rem;
+            margin: 0;
+        }
+
+        /* Form Styles */
+        .address-form .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .address-form label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #333;
+            font-size: 0.95rem;
+        }
+
+        .address-form label i {
+            color: #ff6b35;
+            margin-right: 0.3rem;
+            width: 16px;
+            text-align: center;
+        }
+
+        .required {
+            color: #ff6b35;
+            font-weight: bold;
+        }
+
+        .address-form input[type="text"],
+        .address-form select {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s;
+            font-family: inherit;
+        }
+
+        .address-form input[type="text"]:focus,
+        .address-form select:focus {
+            outline: none;
+            border-color: #ff6b35;
+            box-shadow: 0 0 0 4px rgba(255, 107, 53, 0.1);
+        }
+
+        .address-form select {
+            appearance: none;
+            background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%23ff6b35%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3e%3cpolyline points=%276 9 12 15 18 9%27%3e%3c/polyline%3e%3c/svg%3e');
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            background-size: 1.2em;
+            padding-right: 3rem;
+            cursor: pointer;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        /* Custom Checkbox */
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 2px solid #e0e0e0;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 0;
+        }
+
+        .checkbox-label:hover {
+            border-color: #ff6b35;
+            background: #fff5f2;
+        }
+
+        .checkbox-label input[type="checkbox"] {
+            display: none;
+        }
+
+        .checkbox-custom {
+            width: 24px;
+            height: 24px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            position: relative;
+            transition: all 0.3s;
+            flex-shrink: 0;
+        }
+
+        .checkbox-label input[type="checkbox"]:checked + .checkbox-custom {
+            background: #ff6b35;
+            border-color: #ff6b35;
+        }
+
+        .checkbox-label input[type="checkbox"]:checked + .checkbox-custom::after {
+            content: '';
+            position: absolute;
+            left: 7px;
+            top: 3px;
+            width: 6px;
+            height: 12px;
+            border: solid white;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
+
+        .checkbox-text {
+            font-weight: 600;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .checkbox-text i {
+            color: #ff6b35;
+        }
+
+        /* Form Actions */
+        .form-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .address-form-card {
+                padding: 1.5rem;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .form-actions {
+                grid-template-columns: 1fr;
+            }
+
+            .form-actions .btn-secondary {
+                order: 2;
+            }
+
+            .form-actions .btn-primary {
+                order: 1;
+            }
+        }
+    </style>
+</body>
+</html>

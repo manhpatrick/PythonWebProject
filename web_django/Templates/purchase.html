@@ -1,0 +1,516 @@
+{% load humanize %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Giỏ hàng của bạn</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/purchase.css' %}">
+</head>
+<body>
+    <!-- Messages Display -->
+    {% include 'partials/messages.html' %}
+    
+    <div class="container">
+        <div class="max-w-6xl">
+            <!-- Progress Bar -->
+            <div class="progress-bar">
+                <div class="progress-steps">
+                    <div class="step">
+                        <div class="step-number active" id="step1">1</div>
+                        <span class="step-label active" id="label1">Giỏ hàng</span>
+                    </div>
+                    <div class="step-line" id="line1"></div>
+                    <div class="step">
+                        <div class="step-number inactive" id="step2">2</div>
+                        <span class="step-label inactive" id="label2">Thanh toán</span>
+                    </div>
+                    <div class="step-line" id="line2"></div>
+                    <div class="step">
+                        <div class="step-number inactive" id="step3">3</div>
+                        <span class="step-label inactive" id="label3">Hoàn tất</span>
+                    </div>
+                </div>
+            </div>
+            <!-- Cart Page -->
+            <div id="cartPage">
+                <div class="cart-grid">
+                    <!-- Cart Items -->
+                    <div>
+                        <div class="cart-section">
+                            <h2 class="section-title">
+                                <i class="fas fa-shopping-cart"></i>
+                               Giỏ hàng của bạn ({{ order.get_cart_items }} sản phẩm)
+                            </h2>
+                            <!-- Hiển thị các sản phẩm trong giỏ hàng -->
+                            {% for item in order.orderitem_set.all %}
+                            <div class="cart-item">
+                                <div class="item-content">
+                                    <div class="item-image">
+                                        <img src="{{ item.product.imageURL }}" alt="{{ item.product.name }}">
+                                    </div>
+                                    <div class="item-details">
+                                        <div class="item-header">
+                                            <div>
+                                                <h3 class="item-name">{{ item.product.name }}</h3>
+                                                <p class="item-variant">{{ item.product.brand }} - {{ item.product.country }}</p>
+                                                <p class="item-sku">Mã: {{ item.product.id }}</p>
+                                            </div>
+                                            <button class="delete-btn" data-product="{{ item.product.id }}" data-action="delete">
+                                                <i class="fas fa-trash" style="font-size: 1rem;"></i>
+                                            </button>
+                                        </div>
+
+                                        <div class="item-badges">
+                                            <span class="badge badge-stock">
+                                                <i class="fas fa-box"></i> Còn hàng
+                                            </span>
+                                            <span class="badge badge-delivery">
+                                                <i class="fas fa-truck"></i> Giao 2-3 ngày
+                                            </span>
+                                            {% if item.product.discount_percent > 0 %}
+                                            <span class="badge badge-discount">
+                                                <i class="fas fa-tag"></i> -{{ item.product.discount_percent }}%
+                                            </span>
+                                            {% endif %}
+                                        </div>
+
+                                        <div class="item-footer">
+                                            <div class="item-price">
+                                                {% if item.product.new_price %}
+                                                <span class="original-price">{{ item.product.old_price|intcomma }}đ</span>
+                                                <span class="current-price">{{ item.product.new_price|intcomma }}đ</span>
+                                                {% else %}
+                                                <span class="current-price">{{ item.product.old_price|intcomma }}đ</span>
+                                                {% endif %}
+                                            </div>
+
+                                            <div class="quantity-control">
+                                                <span class="qty-label">Số lượng:</span>
+                                                <div class="qty-buttons">
+                                                    <button class="qty-btn" data-product="{{ item.product.id }}" data-action="remove">−</button>
+                                                    <span class="qty-number">{{ item.quantity }}</span>
+                                                    <button class="qty-btn" data-product="{{ item.product.id }}" data-action="add">+</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Voucher -->
+                        <div class="voucher-section">
+                            <h3 class="voucher-header">
+                                <i class="fas fa-tag"></i>
+                                Mã giảm giá
+                            </h3>
+                            <div class="voucher-input-group">
+                                <input type="text" class="voucher-input" id="voucherInput" placeholder="Nhập mã giảm giá">
+                                <button class="voucher-btn" onclick="applyVoucher()">Áp dụng</button>
+                            </div>
+                            <div class="voucher-applied" id="voucherApplied" style="display: none;">
+                                <i class="fas fa-check-circle"></i>
+                                <span>Đã áp dụng mã <strong id="appliedCode"></strong> - Giảm <strong id="discountAmount"></strong></span>
+                            </div>
+                            {% if active_coupons %}
+                            <div class="voucher-hint">
+                                💡 Các mã có sẵn: 
+                                {% for coupon in active_coupons %}
+                                <strong style="color: #3b82f6;">{{ coupon.code }}</strong>{% if not forloop.last %}, {% endif %}
+                                {% endfor %}
+                            </div>
+                            {% else %}
+                            <div class="voucher-hint">
+                                💡 Hiện tại chưa có mã giảm giá
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Order Summary -->
+                    <div>
+                        <div class="order-summary">
+                            <h3 class="summary-title">Tóm tắt đơn hàng</h3>
+
+                            <div class="summary-row">
+                                <span>Tạm tính</span>
+                                <span id="subtotal">{{ order.get_cart_total|intcomma }}đ</span>
+                            </div>
+                            <div class="summary-row">
+                                <span>Phí vận chuyển</span>
+                                <span>30.000đ</span>
+                            </div>
+                            <div class="summary-row discount" id="discountRow" style="display: none;">
+                                <span>Giảm giá</span>
+                                <span id="discountTotal">-50.000đ</span>
+                            </div>
+                            <div class="summary-row total">
+                                <span class="label">Tổng cộng</span>
+                                <span class="amount" id="grandTotal">{{ order.get_cart_total|add:30000|intcomma }}đ</span>
+                            </div>
+
+                            <button class="checkout-btn" onclick="goToCheckout()">
+                                Tiến hành thanh toán
+                                <i class="fas fa-arrow-right"></i>
+                            </button>
+
+                            <div class="trust-badges">
+                                <div class="trust-item">
+                                    <i class="fas fa-shield-alt"></i>
+                                    <span>Miễn phí đổi trả trong 7 ngày</span>
+                                </div>
+                                <div class="trust-item">
+                                    <i class="fas fa-truck"></i>
+                                    <span>Giao hàng toàn quốc</span>
+                                </div>
+                                <div class="trust-item">
+                                    <i class="fas fa-credit-card"></i>
+                                    <span>Thanh toán an toàn & bảo mật</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Checkout Page -->
+            <div id="checkoutPage" style="display: none;">
+                <div class="checkout-grid">
+                    <!-- Checkout Form -->
+                    <div>
+                        <!-- Shipping Info -->
+                        <div class="cart-section" style="margin-bottom: 1.5rem;">
+                            <h3 class="section-title">
+                                <i class="fas fa-map-marker-alt"></i>
+                                Thông tin giao hàng
+                            </h3>
+
+                            {% if address_info.street %}
+                            <div style="background: #eff6ff; border: 1px solid #93c5fd; border-radius: 8px; padding: 0.75rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem;">
+                                <i class="fas fa-info-circle" style="color: #3b82f6;"></i>
+                                <span>Đã tự động điền địa chỉ mặc định. Bạn có thể chỉnh sửa nếu cần.</span>
+                            </div>
+                            {% endif %}
+
+                            <form id="checkoutForm" method="POST" action="">
+                                {% csrf_token %}
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label class="form-label">Họ và tên <span style="color: #ef4444;">*</span></label>
+                                        <input type="text" name="full_name" class="form-input" placeholder="Nguyễn Văn A" value="{{ user_info.full_name }}" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Số điện thoại <span style="color: #ef4444;">*</span></label>
+                                        <input type="tel" name="phone" class="form-input" placeholder="0901234567" value="{{ user_info.phone }}" required>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">Email <span style="color: #ef4444;">*</span></label>
+                                    <input type="email" name="email" class="form-input" placeholder="email@example.com" value="{{ user_info.email }}" required>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">Địa chỉ <span style="color: #ef4444;">*</span></label>
+                                    <input type="text" name="street" class="form-input" placeholder="Số nhà, tên đường" value="{{ address_info.street }}" required>
+                                </div>
+
+                                <div class="form-row-3">
+                                    <div class="form-group">
+                                        <label class="form-label">Tỉnh/Thành <span style="color: #ef4444;">*</span></label>
+                                        <input type="text" name="city" class="form-input" placeholder="Hà Nội" value="{{ address_info.city }}" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Quận/Huyện <span style="color: #ef4444;">*</span></label>
+                                        <input type="text" name="district" class="form-input" placeholder="Ba Đình" value="{{ address_info.district }}" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Phường/Xã <span style="color: #ef4444;">*</span></label>
+                                        <input type="text" name="ward" class="form-input" placeholder="Phường Phúc Xá" value="{{ address_info.ward }}" required>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">Ghi chú (tùy chọn)</label>
+                                    <textarea name="note" class="form-textarea" rows="3" placeholder="Ghi chú về đơn hàng..."></textarea>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Payment Method -->
+                        <div class="cart-section">
+                            <h3 class="section-title">
+                                <i class="fas fa-credit-card"></i>
+                                Phương thức thanh toán
+                            </h3>
+
+                            <label class="payment-option selected">
+                                <input type="radio" name="payment_method" value="COD" form="checkoutForm" checked>
+                                <div class="payment-info">
+                                    <div class="payment-title">Thanh toán khi nhận hàng (COD)</div>
+                                    <div class="payment-desc">Thanh toán bằng tiền mặt khi nhận hàng</div>
+                                </div>
+                            </label>
+
+                            <label class="payment-option">
+                                <input type="radio" name="payment_method" value="BANK" form="checkoutForm">
+                                <div class="payment-info">
+                                    <div class="payment-title">Chuyển khoản ngân hàng</div>
+                                    <div class="payment-desc">Chuyển khoản qua VietQR hoặc số tài khoản</div>
+                                </div>
+                            </label>
+
+                            <label class="payment-option">
+                                <input type="radio" name="payment_method" value="EWALLET" form="checkoutForm">
+                                <div class="payment-info">
+                                    <div class="payment-title">Ví điện tử (Momo, ZaloPay)</div>
+                                    <div class="payment-desc">Thanh toán qua ví điện tử</div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Order Summary (Checkout) -->
+                    <div>
+                        <div class="order-summary">
+                            <h3 class="summary-title">Đơn hàng của bạn</h3>
+
+                            <!-- Items -->
+                            <div style="margin-bottom: 1rem;">
+                                {% for item in order.orderitem_set.all %}
+                                <div class="order-item-small">
+                                    <div class="item-thumb">
+                                        <img src="{{ item.product.imageURL }}" alt="{{ item.product.name }}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;">
+                                    </div>
+                                    <div class="item-info-small">
+                                        <div class="item-name-small">{{ item.product.name }}</div>
+                                        <div class="item-variant-small">{{ item.product.brand }} - {{ item.product.country }}</div>
+                                        <div class="item-price-small">
+                                            {% if item.product.new_price %}
+                                            {{ item.product.new_price|intcomma }}đ × {{ item.quantity }}
+                                            {% else %}
+                                            {{ item.product.old_price|intcomma }}đ × {{ item.quantity }}
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+
+                            <div style="border-top: 1px solid #e5e7eb; padding-top: 1rem; margin-bottom: 1rem;">
+                                <div class="summary-row">
+                                    <span>Tạm tính</span>
+                                    <span id="checkoutSubtotal">{{ order.get_cart_total|intcomma }}đ</span>
+                                </div>
+                                <div class="summary-row">
+                                    <span>Phí vận chuyển</span>
+                                    <span>30.000đ</span>
+                                </div>
+                                <div class="summary-row discount" id="checkoutDiscountRow" style="display: none;">
+                                    <span>Giảm giá</span>
+                                    <span id="checkoutDiscountTotal">-50.000đ</span>
+                                </div>
+                                <div class="summary-row total">
+                                    <span class="label">Tổng cộng</span>
+                                    <span class="amount" id="checkoutGrandTotal">{{ order.get_cart_total|add:30000|intcomma }}đ</span>
+                                </div>
+                            </div>
+
+                            <button type="submit" form="checkoutForm" class="checkout-btn">
+                                <i class="fas fa-check-circle"></i>
+                                Hoàn tất đơn hàng
+                            </button>
+
+                            <button type="button" class="back-btn" onclick="backToCart()">
+                                ← Quay lại giỏ hàng
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let appliedDiscount = {{ order.get_discount_amount|default:0 }};
+        const subtotalAmount = {{ order.get_cart_total|default:0 }};
+        const shippingFee = {{ shipping_fee|default:30000 }};
+        
+        // Load existing coupon if any
+        {% if order.coupon %}
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('appliedCode').textContent = '{{ order.coupon.code }}';
+            document.getElementById('discountAmount').textContent = '{{ order.get_discount_amount|intcomma }}đ';
+            document.getElementById('voucherApplied').style.display = 'flex';
+            document.getElementById('discountRow').style.display = 'flex';
+            document.getElementById('discountTotal').textContent = '-{{ order.get_discount_amount|intcomma }}đ';
+            updateTotal();
+        });
+        {% endif %}
+
+        function applyVoucher() {
+            const code = document.getElementById('voucherInput').value.trim().toUpperCase();
+            
+            if (!code) {
+                alert('Vui lòng nhập mã giảm giá!');
+                return;
+            }
+            
+            // Call API
+            fetch('/order/apply-coupon/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken'),
+                },
+                body: JSON.stringify({ 'code': code })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    appliedDiscount = data.discount_amount;
+                    document.getElementById('appliedCode').textContent = data.code;
+                    document.getElementById('discountAmount').textContent = appliedDiscount.toLocaleString('vi-VN') + 'đ';
+                    document.getElementById('voucherApplied').style.display = 'flex';
+                    document.getElementById('discountRow').style.display = 'flex';
+                    document.getElementById('discountTotal').textContent = '-' + appliedDiscount.toLocaleString('vi-VN') + 'đ';
+                    document.getElementById('voucherInput').value = '';
+                    updateTotal();
+                } else {
+                    alert(data.error || 'Mã giảm giá không hợp lệ!');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Có lỗi xảy ra. Vui lòng thử lại!');
+            });
+        }
+
+        function updateTotal() {
+            const total = subtotalAmount + shippingFee - appliedDiscount;
+            document.getElementById('grandTotal').textContent = total.toLocaleString('vi-VN') + 'đ';
+            document.getElementById('checkoutGrandTotal').textContent = total.toLocaleString('vi-VN') + 'đ';
+            
+            if (appliedDiscount > 0) {
+                document.getElementById('checkoutDiscountRow').style.display = 'flex';
+                document.getElementById('checkoutDiscountTotal').textContent = '-' + appliedDiscount.toLocaleString('vi-VN') + 'đ';
+            }
+        }
+
+        function goToCheckout() {
+            // Hide cart page
+            document.getElementById('cartPage').style.display = 'none';
+            // Show checkout page
+            document.getElementById('checkoutPage').style.display = 'block';
+            
+            // Update progress bar
+            document.getElementById('step1').classList.remove('active');
+            document.getElementById('step1').classList.add('completed');
+            document.getElementById('step1').innerHTML = '<i class="fas fa-check" style="font-size: 0.875rem;"></i>';
+            document.getElementById('label1').classList.remove('active');
+            document.getElementById('label1').classList.add('inactive');
+            
+            document.getElementById('line1').classList.add('active');
+            
+            document.getElementById('step2').classList.remove('inactive');
+            document.getElementById('step2').classList.add('active');
+            document.getElementById('label2').classList.remove('inactive');
+            document.getElementById('label2').classList.add('active');
+            
+            // Scroll to top
+            window.scrollTo(0, 0);
+        }
+
+        function backToCart() {
+            // Show cart page
+            document.getElementById('cartPage').style.display = 'block';
+            // Hide checkout page
+            document.getElementById('checkoutPage').style.display = 'none';
+            
+            // Update progress bar
+            document.getElementById('step1').classList.remove('completed');
+            document.getElementById('step1').classList.add('active');
+            document.getElementById('step1').textContent = '1';
+            document.getElementById('label1').classList.remove('inactive');
+            document.getElementById('label1').classList.add('active');
+            
+            document.getElementById('line1').classList.remove('active');
+            
+            document.getElementById('step2').classList.remove('active');
+            document.getElementById('step2').classList.add('inactive');
+            document.getElementById('label2').classList.remove('active');
+            document.getElementById('label2').classList.add('inactive');
+            
+            // Scroll to top
+            window.scrollTo(0, 0);
+        }
+
+        // Payment option selection
+        document.addEventListener('DOMContentLoaded', function() {
+            const paymentOptions = document.querySelectorAll('.payment-option');
+            paymentOptions.forEach(option => {
+                option.addEventListener('click', function() {
+                    paymentOptions.forEach(opt => opt.classList.remove('selected'));
+                    this.classList.add('selected');
+                    this.querySelector('input[type="radio"]').checked = true;
+                });
+            });
+        });
+
+        // Quantity buttons
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('qty-btn') || e.target.closest('.qty-btn')) {
+                const btn = e.target.closest('.qty-btn') || e.target;
+                let productId = btn.dataset.product;
+                let action = btn.dataset.action;
+                console.log('Product:', productId, 'Action:', action);
+
+                // Gọi API Django của bạn ở đây
+                /*
+                fetch('/update_item/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken'),
+                    },
+                    body: JSON.stringify({ 'productId': productId, 'action': action })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Updated:', data);
+                    location.reload();
+                });
+                */
+            }
+
+            // Delete button
+            if (e.target.classList.contains('delete-btn') || e.target.closest('.delete-btn')) {
+                const btn = e.target.closest('.delete-btn') || e.target;
+                let productId = btn.dataset.product;
+                console.log('Delete product:', productId);
+                
+                // Gọi API xóa ở đây
+            }
+        });
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    </script>
+</body>
+</html>

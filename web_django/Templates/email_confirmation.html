@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+  <body>
+    <h2>Xin chào {{ name }},</h2>
+    <p>Cảm ơn bạn đã đăng ký tại <b>Sport Clothes</b>!</p>
+    <p>Vui lòng nhấp vào link bên dưới để xác thực tài khoản của bạn:</p>
+    <p>
+      <a href="http://{{ domain }}{% url 'activate' uidb64=uid token=token %}">
+        Xác thực tài khoản
+      </a>
+    </p>
+    <p>Nếu bạn không đăng ký, vui lòng bỏ qua email này.</p>
+    <br>
+    <p>Trân trọng,</p>
+    <p>Đội ngũ Sport Clothes</p>
+  </body>
+</html>

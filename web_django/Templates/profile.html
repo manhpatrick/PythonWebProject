@@ -1,0 +1,718 @@
+{% load static %}
+{% load humanize %}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trang Cá Nhân - SportClothes</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/profile.css' %}">
+</head>
+<body>
+    <!-- Messages Display -->
+    {% include 'partials/messages.html' %}
+    
+    <!-- Header -->
+    <div class="header">
+        <div class="header-top">
+            <div class="header-links">
+                <a href="{% url 'main' %}"><i class="fas fa-home"></i> Trang chủ</a>
+                <a href="{% url 'guide' %}"><i class="fas fa-question-circle"></i> Hỗ trợ</a>
+            </div>
+        </div>
+    </div>
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <h3>Tài khoản của tôi</h3>
+            <div class="menu-item active" onclick="showSection('info')">
+                <i class="fas fa-user"></i>
+                <span>Thông tin cá nhân</span>
+            </div>
+            <div class="menu-item" onclick="showSection('orders')">
+                <i class="fas fa-shopping-bag"></i>
+                <span>Lịch sử đơn hàng</span>
+            </div>
+            <div class="menu-item" onclick="showSection('address')">
+                <i class="fas fa-map-marker-alt"></i>
+                <span>Địa chỉ của tôi</span>
+            </div>
+            <div class="menu-item" >
+                <a href='{% url 'signout' %}'>
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span >Đăng xuất</span>
+                </a>
+            </div>
+        </div>
+        <!-- Content Area -->
+        <div class="content">
+            <!-- Thông tin cá nhân -->
+            <div id="info" class="content-section active">
+                <h2 class="section-title">Thông tin cá nhân</h2>     
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="info-label">Họ và tên</div>
+                        <div class="info-value">{{ user.profile.full_name }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Số điện thoại</div>
+                        <div class="info-value">{{ user.profile.phone }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Ngày sinh</div>
+                        <div class="info-value"> {{ user.profile.birthday }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Giới tính</div>
+                        <div class="info-value">
+                            {% if user.profile.gender == 'male' %}
+                                Nam
+                            {% elif user.profile.gender == 'female' %}
+                                Nữ
+                            {% elif user.profile.gender == 'other' %}
+                                Khác
+                            {% else %}
+                                Chưa xác định
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <form method="POST" action="{% url 'update_profile' %}">
+                    {% csrf_token %}
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Họ và tên *</label>
+                            <input type="text" name="full_name" value="{{ user.profile.full_name }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Số điện thoại *</label>
+                            <input type="tel" name="phone" value="{{ user.profile.phone }}" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Ngày sinh</label>
+                            <input type="date" name="birthday" value="{{ user.profile.birthday|date:'Y-m-d' }}">
+                        </div>
+                        <div class="form-group">
+                            <label>Giới tính</label>
+                            <select name="gender">
+                                <option value="male" {% if user.profile.gender == 'male' %}selected{% endif %}>Nam</option>
+                                <option value="female" {% if user.profile.gender == 'female' %}selected{% endif %}>Nữ</option>
+                                <option value="other" {% if user.profile.gender == 'other' %}selected{% endif %}>Khác</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Lưu thay đổi
+                    </button>
+                </form>
+            </div>
+            <!-- Giỏ hàng hiện tại -->
+            <div id="orders" class="content-section">
+                <h2 class="section-title">
+                    <i class="fas fa-shopping-bag"></i> Đơn hàng của tôi
+                </h2>
+                
+                <!-- Giỏ hàng hiện tại (chưa thanh toán) -->
+                {% if items %}
+                <div style="background: #fff9e6; border-left: 4px solid #ffc107; padding: 1rem; margin-bottom: 1.5rem; border-radius: 8px;">
+                    <h3 style="color: #856404; margin: 0 0 0.5rem 0; font-size: 1.1rem;">
+                        <i class="fas fa-shopping-cart"></i> Giỏ hàng chưa thanh toán
+                    </h3>
+                    <p style="color: #856404; font-size: 0.9rem; margin: 0;">
+                        Bạn có {{ cart_count }} sản phẩm trong giỏ hàng. 
+                        <a href="{% url 'purchase' %}" style="color: #ff6b35; font-weight: 600; text-decoration: none;">
+                            <i class="fas fa-arrow-right"></i> Thanh toán ngay
+                        </a>
+                    </p>
+                </div>
+                {% endif %}
+
+                <!-- Lịch sử đơn hàng đã hoàn tất -->
+                <h3 style="margin-bottom: 1rem; color: #666; font-size: 1rem;">
+                    <i class="fas fa-history"></i> Lịch sử đơn hàng
+                </h3>
+                
+                {% if completed_orders %}
+                    {% for order in completed_orders %}
+                    <div class="order-card">
+                        <div class="order-header">
+                            <div>
+                                <div class="order-id">Đơn hàng #{{ order.id }}</div>
+                                <div style="color: #777; font-size: 0.9rem; margin-top: 0.3rem;">
+                                    Ngày đặt: {{ order.date_ordered|date:"d/m/Y H:i" }}
+                                </div>
+                            </div>
+                            <span class="order-status status-delivered">
+                                <i class="fas fa-check-circle"></i> Đã hoàn tất
+                            </span>
+                        </div>
+                        <div class="order-items">
+                            {% for item in order.orderitem_set.all %}
+                            <div class="order-item">
+                                <div class="item-image">
+                                    {% if item.product.image %}
+                                        <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" style="width:50px; height:50px; border-radius:8px;">
+                                    {% else %}
+                                        <i class="fas fa-tshirt" style="font-size: 1.5rem;"></i>
+                                    {% endif %}
+                                </div>
+                                <div class="item-details">
+                                    <div class="item-name">{{ item.product.name }}</div>
+                                    <div class="item-price" style="color: #666; font-size: 0.9rem;">
+                                        Giá: {{ item.product.new_price|intcomma }}đ
+                                    </div>
+                                    <div class="item-info">
+                                        Số lượng: {{ item.quantity }}
+                                    </div>  
+                                </div>
+                                <div style="font-weight: 600; color: #ff6b35;">
+                                    {{ item.get_total|intcomma }}đ
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <div class="order-total">
+                            <span class="total-label">Tổng tiền:</span>
+                            <span class="total-amount">{{ order.get_cart_total|intcomma }}đ</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                <div style="text-align: center; padding: 3rem; color: #999;">
+                    <i class="fas fa-shopping-bag" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                    <p style="font-size: 1.1rem;">Bạn chưa có đơn hàng nào</p>
+                    <p style="margin-top: 0.5rem;">
+                        <a href="{% url 'main' %}" style="color: #ff6b35; text-decoration: none;">
+                            <i class="fas fa-arrow-left"></i> Tiếp tục mua sắm
+                        </a>
+                    </p>
+                </div>
+                {% endif %}
+            </div>
+            <div id="address" class="content-section">
+                <h2 class="section-title">Địa chỉ của tôi</h2>
+                
+                <!-- Form thêm địa chỉ (ẩn mặc định) -->
+                <div id="addressFormSection" style="display: none;">
+                    <div class="address-form-card">
+                        <div class="form-header">
+                            <i class="fas fa-plus-circle"></i>
+                            <h3 style="margin: 0;">Thêm địa chỉ mới</h3>
+                        </div>                       
+                        <form method="POST" action="/authentication/profile/" class="address-form">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="add_address">                           
+                            <div class="form-group">
+                                <label for="id_street"><i class="fas fa-road"></i> Số nhà, tên đường <span style="color: #ff6b35;">*</span></label>
+                                <input type="text" 
+                                       id="id_street"
+                                       name="street" 
+                                       placeholder="Số 123, Đường Giải Phóng" 
+                                       autocomplete="street-address"
+                                       required>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="id_ward"><i class="fas fa-map-pin"></i> Phường/Xã <span style="color: #ff6b35;">*</span></label>
+                                    <input type="text" 
+                                           id="id_ward"
+                                           name="ward" 
+                                           placeholder="Phường Bách Khoa" 
+                                           autocomplete="address-level3"
+                                           required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="id_district"><i class="fas fa-building"></i> Quận/Huyện <span style="color: #ff6b35;">*</span></label>
+                                    <input type="text" 
+                                           id="id_district"
+                                           name="district" 
+                                           placeholder="Hai Bà Trưng" 
+                                           autocomplete="address-level2"
+                                           required>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="id_city"><i class="fas fa-city"></i> Tỉnh/Thành phố <span style="color: #ff6b35;">*</span></label>
+                                <select id="id_city" 
+                                        name="city" 
+                                        autocomplete="address-level1"
+                                        required>
+                                    <option value="">-- Chọn Tỉnh/Thành phố --</option>
+                                    <option value="Hà Nội">Hà Nội</option>
+                                    <option value="Hồ Chí Minh">Hồ Chí Minh</option>
+                                    <option value="Đà Nẵng">Đà Nẵng</option>
+                                    <option value="Hải Phòng">Hải Phòng</option>
+                                    <option value="Cần Thơ">Cần Thơ</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="id_is_default" class="checkbox-label">
+                                    <input type="checkbox" 
+                                           id="id_is_default"
+                                           name="is_default">
+                                    <span class="checkbox-custom"></span>
+                                    <span class="checkbox-text">
+                                        <i class="fas fa-star"></i>
+                                        Đặt làm địa chỉ mặc định
+                                    </span>
+                                </label>
+                            </div>
+                            <div class="form-actions">
+                                <button type="button" class="btn btn-secondary" onclick="cancelAddAddress()">
+                                    <i class="fas fa-times"></i> Hủy
+                                </button>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-check-circle"></i> Lưu địa chỉ
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <!-- Danh sách địa chỉ -->
+                <div id="addressListSection">
+                    {% if addresses %}
+                        <div class="address-grid">
+                            {% for address in addresses %}
+                            <div class="address-card {% if address.is_default %}default{% endif %}">
+                                {% if address.is_default %}
+                                <span class="default-badge">Mặc định</span>
+                                {% endif %}
+                                <div class="address-name">{{ user.profile.full_name|default:user.username }}</div>
+                                <div class="address-details">
+                                    <div><i class="fas fa-phone"></i> {{ user.profile.phone|default:"Chưa cập nhật" }}</div>
+                                    <div><i class="fas fa-map-marker-alt"></i> {{ address.get_full_address }}</div>
+                                </div>
+                                <div class="address-actions">
+                                    <button class="btn btn-primary btn-small" onclick="editAddress({{ address.id }}, '{{ address.street }}', '{{ address.ward }}', '{{ address.district }}', '{{ address.city }}', {{ address.is_default|lower }})">
+                                        <i class="fas fa-edit"></i> Sửa
+                                    </button>
+                                    <button class="btn btn-secondary btn-small" onclick="deleteAddress({{ address.id }})">
+                                        <i class="fas fa-trash"></i> Xóa
+                                    </button>
+                                </div>
+                            </div>
+                            {% endfor %}
+                            
+                            <!-- Button thêm địa chỉ -->
+                            <button class="btn-add" onclick="showAddAddress()">
+                                <i class="fas fa-plus-circle" style="font-size: 1.2rem;"></i>
+                                <span>Thêm địa chỉ mới</span>
+                            </button>
+                        </div>
+                    {% else %}
+                        <div class="empty-state-address">
+                            <div class="empty-icon-wrapper">
+                                <i class="fas fa-map-marker-alt"></i>
+                            </div>
+                            <h3>Chưa có địa chỉ giao hàng</h3>
+                            <p>Thêm địa chỉ để nhận hàng nhanh chóng và thuận tiện hơn</p>
+                            <button class="btn-add-first" onclick="showAddAddress()">
+                                <i class="fas fa-plus-circle"></i>
+                                <span>Thêm địa chỉ đầu tiên</span>
+                            </button>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Delete Confirmation Popup -->
+    <div id="deleteConfirmPopup" class="popup-overlay" style="display: none;">
+        <div class="popup-container">
+            <div class="popup-icon delete-icon">
+                <i class="fas fa-trash-alt"></i>
+            </div>
+            <h3 class="popup-title">Xác nhận xóa địa chỉ</h3>
+            <p class="popup-message">Bạn có chắc chắn muốn xóa địa chỉ này không? Hành động này không thể hoàn tác.</p>
+            <div class="popup-actions">
+                <button class="popup-btn popup-btn-cancel" onclick="closeDeletePopup()">
+                    <i class="fas fa-times"></i> Hủy
+                </button>
+                <button class="popup-btn popup-btn-confirm" onclick="confirmDelete()">
+                    <i class="fas fa-check"></i> Xóa
+                </button>
+            </div>
+        </div>
+    </div>
+        </div>
+    </div>
+    
+    <!-- Delete Confirmation Popup -->
+    <div id="deleteConfirmPopup" class="popup-overlay" style="display: none;">
+        <div class="popup-container">
+            <div class="popup-icon delete-icon">
+                <i class="fas fa-trash-alt"></i>
+            </div>
+            <h3 class="popup-title">Xác nhận xóa địa chỉ</h3>
+            <p class="popup-message">Bạn có chắc chắn muốn xóa địa chỉ này không? Hành động này không thể hoàn tác.</p>
+            <div class="popup-actions">
+                <button class="popup-btn popup-btn-cancel" onclick="closeDeletePopup()">
+                    <i class="fas fa-times"></i> Hủy
+                </button>
+                <button class="popup-btn popup-btn-confirm" onclick="confirmDelete()">
+                    <i class="fas fa-check"></i> Xóa
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    {% block content %}
+    {% endblock %}
+    
+    <style>
+        /* Popup Overlay */
+        .popup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            animation: fadeIn 0.2s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        /* Popup Container */
+        .popup-container {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            animation: slideUp 0.3s ease;
+            position: relative;
+        }
+        
+        @keyframes slideUp {
+            from {
+                transform: translateY(30px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        /* Popup Icon */
+        .popup-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 2rem;
+        }
+        
+        .delete-icon {
+            background: linear-gradient(135deg, #ff6b6b, #ff5252);
+            color: white;
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+        }
+        
+        /* Popup Title */
+        .popup-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        /* Popup Message */
+        .popup-message {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 25px;
+            font-size: 0.95rem;
+        }
+        
+        /* Popup Actions */
+        .popup-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+        
+        .popup-btn {
+            padding: 12px 28px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .popup-btn-cancel {
+            background: #f1f3f5;
+            color: #495057;
+        }
+        
+        .popup-btn-cancel:hover {
+            background: #e9ecef;
+            transform: translateY(-2px);
+        }
+        
+        .popup-btn-confirm {
+            background: linear-gradient(135deg, #ff6b6b, #ff5252);
+            color: white;
+            box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
+        }
+        
+        .popup-btn-confirm:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(255, 107, 107, 0.4);
+        }
+    </style>
+    
+    <script>
+            function showSection(sectionId) {
+                const sections = document.querySelectorAll('.content-section');
+                const menuItems = document.querySelectorAll('.menu-item');
+                
+                sections.forEach(section => section.classList.remove('active'));
+                menuItems.forEach(item => item.classList.remove('active'));
+                
+                const targetSection = document.getElementById(sectionId);
+                if (targetSection) {
+                    targetSection.classList.add('active');
+                    
+                    const menuItem = document.querySelector(`.menu-item[onclick="showSection('${sectionId}')"]`);
+                    if (menuItem) {
+                        menuItem.classList.add('active');
+                    }
+                    
+                    // Nếu chuyển đến tab address, đảm bảo form bị ẩn và list được hiển thị
+                    if (sectionId === 'address') {
+                        document.getElementById('addressFormSection').style.display = 'none';
+                        document.getElementById('addressListSection').style.display = 'block';
+                    }
+                }
+            }
+
+            function addAddress() {
+                showAddAddress();
+            }
+            
+            function showAddAddress() {
+                document.getElementById('addressFormSection').style.display = 'block';
+                document.getElementById('addressListSection').style.display = 'none';
+                // Scroll to form
+                document.getElementById('addressFormSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+            
+            function cancelAddAddress() {
+                document.getElementById('addressFormSection').style.display = 'none';
+                document.getElementById('addressListSection').style.display = 'block';
+                
+                // Reset form về chế độ "add"
+                const form = document.querySelector('.address-form');
+                form.action = '/authentication/profile/';
+                form.reset();
+                
+                // Thêm lại action input nếu chưa có
+                if (!form.querySelector('input[name="action"]')) {
+                    const actionInput = document.createElement('input');
+                    actionInput.type = 'hidden';
+                    actionInput.name = 'action';
+                    actionInput.value = 'add_address';
+                    form.insertBefore(actionInput, form.firstChild.nextSibling);
+                }
+                
+                // Reset button text
+                const submitBtn = form.querySelector('button[type="submit"]');
+                submitBtn.innerHTML = '<i class="fas fa-check-circle"></i> Lưu địa chỉ';
+                
+                // Reset tiêu đề
+                const formTitle = document.querySelector('.form-header h3');
+                formTitle.textContent = 'Thêm địa chỉ mới';
+            }
+            
+            // Biến lưu addressId để xóa
+            let deleteAddressId = null;
+            
+            // Xóa địa chỉ - Hiện popup
+            function deleteAddress(addressId) {
+                deleteAddressId = addressId;
+                document.getElementById('deleteConfirmPopup').style.display = 'flex';
+            }
+            
+            // Đóng popup xóa
+            function closeDeletePopup() {
+                document.getElementById('deleteConfirmPopup').style.display = 'none';
+                deleteAddressId = null;
+            }
+            
+            // Xác nhận xóa
+            function confirmDelete() {
+                if (deleteAddressId) {
+                    window.location.href = `/authentication/addresses/${deleteAddressId}/delete/`;
+                }
+            }
+            
+            // Đóng popup khi click overlay
+            document.addEventListener('click', function(e) {
+                if (e.target.id === 'deleteConfirmPopup') {
+                    closeDeletePopup();
+                }
+            });
+            
+            // Sửa địa chỉ
+            function editAddress(id, street, ward, district, city, isDefault) {
+                // Hiện form
+                showAddAddress();
+                
+                // Fill dữ liệu vào form
+                document.getElementById('id_street').value = street;
+                document.getElementById('id_ward').value = ward;
+                document.getElementById('id_district').value = district;
+                document.getElementById('id_city').value = city;
+                document.getElementById('id_is_default').checked = isDefault;
+                
+                // Đổi action của form để update thay vì create
+                const form = document.querySelector('.address-form');
+                form.action = `/authentication/addresses/${id}/edit/`;
+                
+                // Xóa hidden input action (không cần cho edit)
+                const actionInput = form.querySelector('input[name="action"]');
+                if (actionInput) {
+                    actionInput.remove();
+                }
+                
+                // Đổi text button
+                const submitBtn = form.querySelector('button[type="submit"]');
+                submitBtn.innerHTML = '<i class="fas fa-check-circle"></i> Cập nhật địa chỉ';
+                
+                // Đổi tiêu đề
+                const formTitle = document.querySelector('.form-header h3');
+                formTitle.textContent = 'Chỉnh sửa địa chỉ';
+            }
+            
+            // Đặt địa chỉ mặc định
+            function setDefaultAddress(addressId) {
+                if (confirm('Đặt địa chỉ này làm mặc định?')) {
+                    window.location.href = `/authentication/addresses/${addressId}/set_default/`;
+                }
+            }
+            
+            // Xử lý hash URL khi trang load
+            document.addEventListener("DOMContentLoaded", () => {
+                const hash = window.location.hash; 
+                if (hash) {
+                    const sectionId = hash.substring(1);
+                    showSection(sectionId);
+                }
+            });
+
+            // Xử lý khi hash thay đổi (back/forward browser)
+            window.addEventListener('hashchange', () => {
+                const hash = window.location.hash;
+                if (hash) {
+                    const sectionId = hash.substring(1);
+                    showSection(sectionId);
+                }
+            });
+
+            document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('qty-btn')) {
+                let productId = e.target.dataset.product;
+                let action = e.target.dataset.action;
+                console.log('Product:', productId, 'Action:', action);
+
+                fetch('/update_item/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken'),
+                    },
+                    body: JSON.stringify({ 'productId': productId, 'action': action })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Updated:', data);
+                    location.reload(); // reload lại để cập nhật
+                });
+            }
+        });
+
+            // Lấy phần tử (kiểm tra tồn tại trước khi gắn)
+            const openBtn = document.getElementById('openConfirmPopup');
+            const confirmPopup = document.getElementById('confirmPopup');
+            const cancelBtn = document.getElementById('cancelPopup');
+            const confirmBtn = document.getElementById('confirmOrder');
+            const successPopup = document.getElementById('successPopup');
+
+        if (openBtn && confirmPopup) {
+            openBtn.addEventListener('click', function() {
+                confirmPopup.style.display = 'flex';
+            });
+        }
+
+        if (cancelBtn && confirmPopup) {
+            cancelBtn.addEventListener('click', function() {
+                confirmPopup.style.display = 'none';
+            });
+        }
+
+        if (confirmBtn && confirmPopup && successPopup) {
+            confirmBtn.addEventListener('click', function() {
+                // Ẩn popup xác nhận
+                confirmPopup.style.display = 'none';
+
+                // Hiện popup thành công
+                successPopup.style.display = 'flex';
+
+                // Tạo hiệu ứng fade out sau 1.6s rồi redirect
+                setTimeout(() => {
+                    // fade out
+                    successPopup.style.transition = 'opacity 0.6s';
+                    successPopup.style.opacity = '0';
+                }, 1600);
+
+                // redirect sau khi fade xong
+                setTimeout(() => {
+                    window.location.href = '/';
+                }, 2200);
+            });
+        }
+            
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,608 @@
+{% load static %}
+{% load humanize %}
+<!DOCTYPE html>
+<html lang="en,vi">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sport clothes</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css"
+    />
+    <link rel="stylesheet" href="{% static 'css/style.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/base.css' %}" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap"
+      rel="stylesheet"
+    />
+    <script
+      src="https://kit.fontawesome.com/be5a5c6271.js"
+      crossorigin="anonymous"
+    ></script>
+</head>
+<body>
+    <!-- Messages Display -->
+    {% include 'partials/messages.html' %}
+    
+    <div class="header">
+      <div class="grid">
+        <!-- Header navbar -->
+        <nav class="header__navbar">
+          <ul class="header__nav-list">
+            <li class="header__nav-item header__nav-item--slash">
+              <a href="/" class="header__nav-item">Trang chủ </a>
+            </li>
+            <li class="header__nav-item header__nav-item--slash">
+              Tải ứng dụng
+            </li>
+            <li class="header__nav-item header__nav-item--post">
+              <span class="header__navbar-title--unchanged"
+                >Kết nối tài khoản</span
+              >
+            </li>
+            <li class="header__nav-item">
+              <a href="" class="icon-link" target="_blank">
+                <i class="fa-brands fa-facebook"></i>              
+              </a>
+              <a href="" class="icon-link" target="_blank">
+                <i class="fa-brands fa-instagram"></i>
+              </a>
+            </li>
+          </ul>
+          <ul class="header__nav-list">
+            <li class="header__nav-item">
+              <a href="" class="header__nav-item-link">
+                <i class="header__navbar-icon fa-regular fa-bell"></i>
+                Thông báo
+              </a>
+              <div class="header__notify">
+                <div class="header__notify-header">
+                  <h3 class="header__notify-text">Thông báo mới nhất</h3>
+                </div>
+                <ul class="header__notify-list">
+                  <li class="header__notify-list-item">
+                    <a href="" class="header__notify-link">
+                      <img
+                        src=""
+                        alt=""
+                        class="header__notify-img"
+                      />
+                      <div class="header__notify-body">
+                        <h4 class="header__notify-name">
+                          Áo thể thao MU giảm giá 50%, còn 150k/1 bộ rất là rẻ
+                        </h4>
+                        <h4 class="header__notify-desc">
+                          Áo Cristiano Ronaldo của anh 7, Al nassr, Manchester
+                          United
+                        </h4>
+                      </div>
+                    </a>
+                  </li>
+                  <li class="header__notify-list-item">
+                    <a href="" class="header__notify-link">
+                      <img
+                        src=""
+                        alt=""
+                        class="header__notify-img"
+                      />
+                      <div class="header__notify-body">
+                        <h4 class="header__notify-name">Nike size 34</h4>
+                        <h4 class="header__notify-desc">Giày thể thao 200;</h4>
+                      </div>
+                    </a>
+                  </li>
+                </ul>
+                <div class="footer__notify">
+                  <a href="" class="footer__notify-btn">Xem tất cả</a>
+                </div>
+              </div>
+            </li>
+            <li class="header__nav-item">
+              <a href="{% url 'guide' %}" class="header__nav-item-link">
+                <i class="header__navbar-icon fa-regular fa-circle-question">
+                </i>
+                Hỗ trợ
+              </a>
+            </li>
+            <li
+              class="header__nav-item"
+            >
+              <div class="header__nav-item-link header__nav-item-link--language">
+                <i class="header__navbar-icon fa-solid fa-globe">
+                </i>
+                Tiếng Việt
+              </div>
+            </li>
+            {% if user.is_authenticated %}
+            <li class="header__nav-item">
+              <a href="" class="header__nav-item-link">
+                <i class="header__navbar-icon fa-solid fa-circle-user"></i>
+                  <span class="user-name">{{ request.session.accountname }}</span>
+              </a>
+              <ul class="header__user-menu">
+                <li class="header__user-item">
+                  <a href="/authentication/profile/" class="header__user-link">Tài khoản của tôi</a>
+                </li>
+                <li class="header__user-item">
+                  <a href="/authentication/profile/#address" class="header__user-link">Địa chỉ</a>
+                </li>
+                <li class="header__user-item">
+                    <a href="/authentication/profile/#orders" class="header__user-link">Đơn mua</a>
+                </li>
+                <li class="header__user-item">
+                    <a href="{% url 'signout' %}" class="header__user-link">Đăng xuất</a>
+                </li>
+              </ul>
+            </li>
+            {% else %}
+            <li
+              class="header__nav-item header__nav-item--bold header__nav-item--slash"
+            >
+              <a href="{% url 'signup' %}?next={{ request.get_full_path|urlencode }}" class="header__nav-item-btn">Đăng ký</a>
+            </li>
+            <li class="header__nav-item header__nav-item--bold">
+              <a href="{% url 'signin' %}?next={{ request.get_full_path|urlencode }}" class="header__nav-item-btn">Đăng nhập</a>
+            </li>
+            {% endif %}
+          </ul>
+        </nav>
+        <!-- Header search -->
+        <div class="header-searching">
+          <div class="header__logo">
+            <img src="{% static 'css/image/web-logo.png' %}" alt="" class="header__logo-img" />
+          </div>
+          <form action="{% url 'search' %}" method="get" class="header__search-bar">
+            <div class="header__search-input-wrap">
+              <input
+                type="text"
+                name="searched"
+                class="header__search-input"
+                placeholder="Nhập để tìm kiếm sản phẩm"
+                value="{{ searched|default:'' }}"
+              />
+            </div>
+            <button type="submit" class="header__search-btn">
+              <i class="header__search-icon fa-solid fa-magnifying-glass"></i>
+            </button>
+          </form>
+          <div class="header__cart">
+            <div class="header__cart-wrap">
+                <i class="header__cart-icon fa-solid fa-cart-shopping"></i>    
+                {% if user.is_authenticated and items %}
+                {% comment %} CÓ SẢN PHẨM TRONG GIỎ - HIỂN THỊ THẬT {% endcomment %}
+                <div class="header__cart-list">
+                  <h4 class="header__cart-heading">Sản phẩm đã thêm</h4>
+                  <ul class="header__cart-list-item">
+                    {% for item in items %}
+                    <li class="header__cart-item">
+                        {% if item.product.imageURL %}
+                            <img src="{{ item.product.imageURL }}" alt="{{ item.product.name }}" class="header__cart-img">
+                        {% else %}
+                            <img src="{% static 'image/test.jpg' %}" alt="{{ item.product.name }}" class="header__cart-img">
+                        {% endif %}
+                        <div class="header__cart-item-info">
+                            <div class="header__cart-item-head">
+                                <h5 class="header__cart-item-name">{{ item.product.name|truncatechars:15 }}</h5>
+                                <div class="header__cart-price-wrap">
+                                    <span class="header__cart-item-price">{{ item.product.new_price|floatformat:0|intcomma }}đ</span>
+                                    <span class="header__cart-item-multiply">x</span>
+                                    <span class="header__cart-item-number">{{ item.quantity }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </li>
+                    {% endfor %}
+                  </ul>
+                  <a href="{% url 'profile' %}#orders" class="view-cart btn btn--primary">
+                    Xem giỏ hàng
+                  </a>
+                </div>
+                {% else %}
+                {% comment %} GIỎ HÀNG TRỐNG HOẶC CHƯA ĐĂNG NHẬP {% endcomment %}
+                <div class="header__cart-list header__cart-list--empty">
+                  <img
+                    src="{% static 'css/image/empty-shopping-cart.png' %}"
+                    alt=""
+                    class="empty-cart-image"
+                  />
+                  <p class="empty-cart-message">Chưa có sản phẩm</p>
+                </div>
+                {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="container">
+      <div class="grid">
+        <div class="grid-row app-content">
+          <div class="grid__column-2">
+            <nav class="category">
+              <h3 class="category__heading">
+                <i class="fa-solid fa-list category__heading-icon"></i>
+                Danh mục
+              </h3>
+              <ul class="category-list">
+                <li class="category-item {% if request.resolver_match.url_name == 'main' %}category-item--active{% endif %}">
+                    <a href="{% url 'main' %}" class="category-item__link category-item__link--all">Tất cả</a>
+                </li>
+                {% for cat in categories %}
+                <li class="category-item {% if category.slug == cat.slug %}category-item--active{% endif %}">
+                    <a href="{% url 'category' cat.slug %}" class="category-item__link">
+                        {{ cat.name }}
+                    </a>
+                </li>
+                {% endfor %}
+              </ul>
+            </nav>
+          </div>
+          <div class="grid__column-10">
+            <div class="home-filter">
+              <span class="home-filter__label">Sắp xếp theo</span>
+              <a href="?{% if searched %}searched={{ searched }}&{% endif %}sort=newest" class="home-filter__btn btn {% if current_sort == 'newest' or not current_sort %}btn--primary{% endif %}">Mới nhất</a>
+              <a href="?{% if searched %}searched={{ searched }}&{% endif %}sort=popular" class="home-filter__btn btn {% if current_sort == 'popular' %}btn--primary{% endif %}">Phổ biến</a>
+              <a href="?{% if searched %}searched={{ searched }}&{% endif %}sort=best_selling" class="home-filter__btn btn {% if current_sort == 'best_selling' %}btn--primary{% endif %}">Bán chạy</a>             
+              <div class="select-input">
+                <span class="select-input__label">Giá</span>
+                <i class="select-input__icon fas fa-angle-down"></i>
+                <ul class="select-input__list">
+                  <li class="select-input__item">
+                    <a href="?{% if searched %}searched={{ searched }}&{% endif %}sort=price_asc" class="select-input__link">Giá: Thấp đến cao</a>
+                  </li>
+                  <li class="select-input__item">
+                    <a href="?{% if searched %}searched={{ searched }}&{% endif %}sort=price_desc" class="select-input__link">Giá: Cao đến thấp</a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+            <div class="home-product">
+              <div class="grid-row">
+                {% if page_obj %}
+                  {% for product in page_obj %}
+                  <div class="grid__column-2-4">
+                    <div class="home-product-item">
+                      <div class="product-item" onclick="openProductModal({{ product.id }})">
+                        {% if product.image %}
+                          <img class="home-product-item__img" src="{{ product.image.url }}" alt="{{ product.name }}">
+                        {% else %}
+                          <img class="home-product-item__img" src="{% static 'image/default-product.png' %}" alt="No image">
+                        {% endif %}
+                        <h4 class="home-product-item__name">{{ product.name }}</h4>
+                        <div class="home-product-item__price">
+                          <span class="home-product-item__price--old">{{ product.old_price|floatformat:0|intcomma }}Đ</span>
+                          {% if product.new_price > 0 %}
+                            <span class="home-product-item__price--new">{{ product.new_price|floatformat:0|intcomma }}Đ</span>
+                          {% endif %}
+                        </div>
+                        <div class="home-product-item__action">
+                          <span class="home-product-item__like home-product-item__like--liked">
+                            <i class="product-item-like-filled-icon fa-solid fa-heart"></i>
+                            <i class="product-item-like-empty-icon fa-regular fa-heart"></i>
+                          </span>
+                          <div class="home-product-item__rating">{{ product.stars_html|safe }}
+                            <span class="home-product-item__rating-number">{{ product.rating }}/5 </span>
+                          </div>
+                          <span class="home-product-item__sold-number">{{ product.sold_number }} đã bán</span>
+                        </div>
+                        <div class="home-product-item__origin">
+                          <span class="home-product-item__brand">{{ product.brand }}</span>
+                          <span class="home-product-item__country">{{ product.country }}</span>
+                        </div>
+
+                        {% if product.discount_percent > 0 %}
+                          <div class="home-product-item__sale-off">
+                            <span class="home-product-item__sale-off-percent">{{ product.discount_percent }}%</span>
+                            <span class="home-product-item__sale-off-label">Giảm</span>
+                          </div>
+                        {% endif %}
+                      </div>
+                    </div>
+                  </div>
+                  {% endfor %}
+                {% else %}
+                  <p class="search_no-item">Không tìm thấy sản phẩm nào.</p>
+                {% endif %}
+              </div>
+            </div>
+            <ul class="pagination home-product__pagination">
+              {% if page_obj.has_previous %}
+                <li class="pagination-item">
+                  <a href="?{% if searched %}searched={{ searched }}&{% endif %}page={{ page_obj.previous_page_number }}&sort={{ current_sort }}" class="pagination-item__link">
+                    <i class="pagination-item__icon fa-solid fa-angle-left"></i>
+                  </a>
+                </li>
+              {% endif %}
+              {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                  <li class="pagination-item pagination-item--active">
+                    <a href="?{% if searched %}searched={{ searched }}&{% endif %}page={{ num }}&sort={{ current_sort }}" class="pagination-item__link">{{ num }}</a>
+                  </li>
+                {% else %}
+                  <li class="pagination-item">
+                    <a href="?{% if searched %}searched={{ searched }}&{% endif %}page={{ num }}&sort={{ current_sort }}" class="pagination-item__link">{{ num }}</a>
+                  </li>
+                {% endif %}
+              {% endfor %}
+              {% if page_obj.has_next %}
+                <li class="pagination-item">
+                  <a href="?{% if searched %}searched={{ searched }}&{% endif %}page={{ page_obj.next_page_number }}&sort={{ current_sort }}" class="pagination-item__link">
+                    <i class="pagination-item__icon fa-solid fa-angle-right"></i>
+                  </a>
+                </li>
+              {% endif %}
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="footer">
+      <div class="footer-content">
+        <div class="footer-section">
+            <h3>Về chúng tôi</h3>
+            <p class="footer-description">Cửa hàng thể thao uy tín, chất lượng hàng đầu Việt Nam</p>
+            <div class="social-links">
+                <a href="#" aria-label="Facebook">
+                    <i class="fa-brands fa-facebook"></i>              
+                </a>
+                <a href="#" aria-label="Instagram">
+                    <i class="fa-brands fa-instagram"></i>
+                </a>
+            </div>
+        </div>
+        <div class="footer-section">
+            <h3>Liên kết</h3>
+            <ul>
+                <li><a href="/">Trang chủ</a></li>
+                <li><a href="{% url 'guide' %}">Trợ giúp</a></li>
+                <li><a href="{% url 'policy' %}">Điều khoản & Dịch vụ</a></li>
+            </ul>
+        </div>
+        
+        <div class="footer-section">
+            <h3>Liên hệ</h3>
+            <ul>
+                <li><i class="fa-solid fa-envelope"></i> SportClothes@example.com</li>
+                <li><i class="fa-solid fa-phone"></i> (84) 123-456-789</li>
+                <li><i class="fa-solid fa-location-dot"></i> Hà Nội, Việt Nam</li>
+            </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+          <p>&copy; 2025 SportClothes. Tất cả quyền được bảo lưu.</p>
+      </div>
+    </div>
+    {% block modal-signin %}
+    {% endblock %}
+    {% block modal-signup %}
+    {% endblock %}
+    {% block modal-reset_password %}
+    {% endblock %}
+    {% block modal-reset_password-confirm %}
+    {% endblock %}
+    {% include 'partials/cart_item.html' %}
+</body>
+<script>
+// =============================
+// LẤY TOKEN CSRF (cho POST)
+// =============================
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
+  const csrftoken = getCookie('csrftoken');
+
+  // =============================
+  // MỞ / ĐÓNG MODAL GIỎ HÀNG
+  // =============================
+  let productQuantity = 1;
+  let currentProductId = null;
+
+  function openCartModal() {
+    document.getElementById('cartModal').classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeCartModal() {
+    document.getElementById('cartModal').classList.remove('active');
+    document.body.style.overflow = 'auto';
+    productQuantity = 1;
+  }
+
+  // =============================
+  // TĂNG / GIẢM SỐ LƯỢNG
+  // =============================
+  function increaseQuantity() {
+    const input = document.getElementById('productQuantity');
+    if (productQuantity < 99) {
+      productQuantity++;
+      input.value = productQuantity;
+    }
+  }
+
+  function decreaseQuantity() {
+    const input = document.getElementById('productQuantity');
+    if (productQuantity > 1) {
+      productQuantity--;
+      input.value = productQuantity;
+    }
+  }
+  // =============================
+  // MỞ POPUP SẢN PHẨM
+  // =============================
+  function openProductModal(productId) {
+    fetch(`/api/product/${productId}/`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) {
+          alert("Không tìm thấy sản phẩm");
+          return;
+        }
+        currentProductId = productId; // lưu id cho nút thêm vào giỏ
+        // Cập nhật thông tin trong modal
+        document.getElementById('modalProductImage').style.backgroundImage = `url("${data.image}")`;
+        document.getElementById('modalProductName').textContent = data.name;
+        document.getElementById('modalProductBrand').textContent = data.brand;
+        document.getElementById('modalProductCountry').textContent = data.country;
+        document.getElementById('modalProductNewPrice').textContent = data.new_price.toLocaleString() + "đ";
+        document.getElementById('modalProductOldPrice').textContent = data.old_price ? data.old_price.toLocaleString() + "đ" : '';
+        document.getElementById('modalProductDiscount').textContent = data.discount_percent ? `-${data.discount_percent}%` : '';
+        document.getElementById('modalProductDetail').textContent = data.detail;
+        document.getElementById('modalProductSoldCount').textContent = data.sold_number;
+        document.getElementById('modalProductRating').textContent = data.rating + "/5";
+        document.getElementById("modalProductStars").innerHTML = renderStars(data.rating);
+        // reset lại số lượng
+        productQuantity = 1;
+        document.getElementById('productQuantity').value = 1;
+
+        openCartModal();
+      })
+      .catch(err => console.error(err));
+  }
+  // =============================
+  // RENDER SAO
+  // =============================
+  function renderStars(rating) {
+    let stars = "";
+    const fullStars = Math.floor(rating);
+    const hasHalfStar = rating - fullStars >= 0.5;
+    for (let i = 1; i <= 5; i++) {
+      if (i <= fullStars) {
+        stars += '<i class="fa-solid fa-star"></i>';
+      } else if (i === fullStars + 1 && hasHalfStar) {
+        stars += '<i class="fa-solid fa-star-half-stroke"></i>';
+      } else {
+        stars += '<i class="fa-regular fa-star"></i>';
+      }
+    }
+    return stars;
+  }
+
+// =============================
+// THÊM VÀO GIỎ HÀNG (POST) - FINAL FIX
+// =============================
+  async function addToCart() {
+    try {
+        console.log("=== DEBUG ADD TO CART START ===");
+        console.log("Current Product ID:", currentProductId);
+
+        if (!currentProductId) {
+            alert('❌ Không xác định được sản phẩm!');
+            return;
+        }
+
+        const quantityInput = document.getElementById('productQuantity');
+        if (!quantityInput) {
+            alert('Không tìm thấy input số lượng!');
+            return;
+        }
+
+        const quantity = parseInt(quantityInput.value) || 1;
+        console.log("Quantity:", quantity);
+
+        // Kiểm tra token
+        if (!csrftoken) {
+            console.error("⚠️ Không tìm thấy CSRF token!");
+            alert("Không thể gửi yêu cầu. Vui lòng tải lại trang.");
+            return;
+        }
+
+        // Nút loading
+        const addButton = document.querySelector('.btn-add-cart');
+        if (addButton) {
+            addButton.disabled = true;
+            addButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang thêm...';
+        }
+
+        // Gửi request
+        console.log("📤 Sending POST request to /add-to-cart/");
+        const response = await fetch('/add-to-cart/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': csrftoken,
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+            body: `product_id=${encodeURIComponent(currentProductId)}&quantity=${encodeURIComponent(quantity)}`
+        });
+
+        console.log("Response Status:", response.status, response.statusText);
+        console.log("Response Headers:", Object.fromEntries(response.headers.entries()));
+
+        // ⚠️ Nếu server trả về 404 hoặc HTML → không parse JSON nữa
+        if (!response.ok) {
+            const text = await response.text();
+            console.error("❌ Response not OK, HTML returned:", text.slice(0, 200));
+            alert("Không tìm thấy đường dẫn /add-to-cart/. Kiểm tra lại URL trong urls.py!");
+            return;
+        }
+
+        // Parse JSON an toàn
+        const data = await response.json();
+        console.log("✅ Response JSON:", data);
+
+        if (data.success) {
+            alert("✅ " + (data.message || "Đã thêm sản phẩm vào giỏ hàng!"));
+            closeCartModal();
+
+            if (typeof updateCartCount === "function" && data.cartItems !== undefined) {
+                updateCartCount(data.cartItems);
+            }
+
+            // Reload nhẹ sau 0.5s để cập nhật dropdown giỏ hàng
+            setTimeout(() => window.location.reload(), 500);
+        } else {
+            alert("❌ " + (data.error || "Không thể thêm sản phẩm"));
+        }
+
+    } catch (error) {
+        console.error("💥 Fetch error:", error);
+        alert("❌ Có lỗi khi kết nối tới máy chủ. Vui lòng thử lại.");
+    } finally {
+        // Khôi phục nút
+        const addButton = document.querySelector('.btn-add-cart');
+        if (addButton) {
+            addButton.disabled = false;
+            addButton.innerHTML = '<i class="fa-solid fa-cart-plus"></i> Thêm vào giỏ';
+        }
+        console.log("=== DEBUG ADD TO CART END ===");
+    }
+  }
+
+  // =============================
+  // ĐÓNG MODAL KHI NHẤN ESC
+  // =============================
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeCartModal();
+  });
+  function updateCartBadge(count) {
+      let cartBadge = document.querySelector('.cart-badge');
+      const cartWrap = document.querySelector('.header__cart-wrap');
+      
+      if (cartWrap) {
+          if (!cartBadge) {
+              cartBadge = document.createElement('span');
+              cartBadge.className = 'cart-badge';
+              cartWrap.appendChild(cartBadge);
+          }
+          
+          if (count > 0) {
+              cartBadge.textContent = count;
+              cartBadge.style.display = 'flex';
+          } else {
+              cartBadge.style.display = 'none';
+          }
+      }
+  }
+</script>
+</html>

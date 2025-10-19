@@ -1,0 +1,67 @@
+{% extends "index.html" %}
+{% load static %}
+<!-- Modal -->
+{% block modal-signin %}
+<div class="modal">
+  <div class="modal__overlay"></div>
+  <div class="modal__body"> 
+    <div class="auth-form">
+      <div class="auth-form__container">
+        <div class="auth-form__header">
+          <a href="{% url 'signin' %}{% if request.GET.next %}?next={{ request.GET.next }}{% endif %}" class="auth-form__register">
+            <h3>Đăng nhập</h3>
+          </a>
+          <a href="{% url 'signup' %}{% if request.GET.next %}?next={{ request.GET.next }}{% endif %}" class="auth-form__switch">
+            <span>Đăng ký</span>
+          </a>
+        </div>
+        <form action="{% url 'signin' %}" method="POST">
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{{ next }}">
+          <div class="auth-form__form">
+            <div class="auth-form__group">
+                <input type="email" id="Email" name="Email" class="auth-form__input" placeholder="Email" required/>
+                <input type="password" id="password" name ="password" class="auth-form__input" placeholder="Mật khẩu" required/>
+            </div>
+            {% if messages %}
+              <div class="messages">
+                {% for message in messages %}
+                  <div class="message {{ message.tags }}">
+                    {{ message }}
+                  </div>
+                {% endfor %}
+              </div>
+            {% endif %}
+            <div class="auth__form-help">
+                <a href="{% url 'reset_password' %}?next={{ next|urlencode }}" class="auth__form-help-link">
+                <span class="help-text-forget">Quên mật khẩu</span>
+              </a>
+              <a href="{% url 'guide' %}" class="auth__form-help-link">
+                <span class="help-text-guide">Cần trợ giúp?</span>
+              </a>
+            </div>
+            <div class="auth-form__control">
+              {% if next %}
+              <a href="{{ next }}" class="btn btn--back">Trở lại</a>
+              {% else %}
+              <a href="{% url 'main' %}" class="btn btn--back">Trở lại</a>
+              {% endif %}
+              <button type="submit" class="btn btn--primary">Đăng nhập</button>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="auth-form__social">
+        <a href="" class="btn btn-with-fb-icon">
+          <i class="auth__icon fa-brands fa-square-facebook"></i>
+          <span class="auth__title"> Đăng nhập với Facebook </span>
+        </a>
+        <a href="" class="btn btn-with-gg-icon">
+          <i class="auth__icon fa-brands fa-google"></i>
+          <span class="auth__title"> Đăng nhập với Google </span>
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
