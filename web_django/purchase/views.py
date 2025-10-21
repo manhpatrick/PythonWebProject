@@ -4,8 +4,47 @@ from order.models import Order, Coupon
 from authentication.models import Address, Profile
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
+from django.conf import settings
 
 # Create your views here.
+
+def send_order_confirmation_email(order):
+    """Gửi email xác nhận đơn hàng"""
+    # Lấy tên phương thức thanh toán
+    payment_method_display = dict(Order.PAYMENT_CHOICES).get(order.payment_method, order.payment_method)
+    
+    # Chuẩn bị context cho email template
+    context = {
+        'order_id': order.id,
+        'customer_name': order.customer_name,
+        'customer_phone': order.customer_phone,
+        'customer_email': order.customer_email,
+        'shipping_address': order.shipping_address,
+        'note': order.note,
+        'payment_method': payment_method_display,
+        'date_ordered': order.date_ordered.strftime('%d/%m/%Y %H:%M'),
+        'order_items': order.orderitem_set.all(),
+        'cart_total': order.get_cart_total,
+        'discount_amount': order.get_discount_amount,
+        'final_total': order.get_final_total,
+    }
+    
+    # Render HTML email
+    html_message = render_to_string('order_confirmation_email.html', context)
+    plain_message = strip_tags(html_message)  # Fallback cho email client không hỗ trợ HTML
+    
+    # Gửi email
+    send_mail(
+        subject=f'Xác nhận đơn hàng #{order.id} - Cảm ơn bạn đã mua hàng!',
+        message=plain_message,
+        from_email=settings.EMAIL_HOST_USER,
+        recipient_list=[order.customer_email],
+        html_message=html_message,
+        fail_silently=False,
+    )
 @login_required(login_url='signin')
 def purchase(request):
     if request.method == 'POST':
@@ -38,6 +77,12 @@ def purchase(request):
                 order.coupon.mark_used_by(request.user)
             
             order.save()
+            
+            # Gửi email xác nhận đơn hàng
+            try:
+                send_order_confirmation_email(order)
+            except Exception as e:
+                print(f"Lỗi gửi email: {str(e)}")
             
             messages.success(request, 'Đặt hàng thành công! Chúng tôi sẽ liên hệ với bạn sớm nhất.')
             return redirect('profile')

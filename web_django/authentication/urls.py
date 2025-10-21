@@ -18,4 +18,5 @@ urlpatterns = [
     path('addresses/<int:address_id>/edit/', views.address_edit, name='address_edit'),
     path('addresses/<int:address_id>/delete/', views.address_delete, name='address_delete'),
     path('addresses/<int:address_id>/set_default/', views.address_set_default, name='address_set_default'),
+    path('google-callback/', views.google_oauth_callback, name='google_oauth_callback'),
 ]

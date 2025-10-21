@@ -603,13 +603,6 @@ def policy(request):
 
 @login_required(login_url='signin')
 def profile(request):
-    # DEBUG: In ra mọi request
-    print("=" * 70)
-    print(f"REQUEST METHOD: {request.method}")
-    print(f"POST data: {dict(request.POST)}")
-    print(f"Action value: {request.POST.get('action')}")
-    print("=" * 70)
-    
     # Xử lý form thêm địa chỉ
     if request.method == 'POST' and request.POST.get('action') == 'add_address':
         # Debug: In ra thông tin POST data
@@ -667,3 +660,13 @@ def profile(request):
         'cart_total': current_order.get_cart_total,
     }
     return render(request, "profile.html", context)
+
+@login_required
+def google_oauth_callback(request):
+    """
+    Trang callback sau khi đăng nhập Google thành công
+    Sẽ gửi message về parent window và tự đóng popup
+    """
+    return render(request, 'Authentication/google_callback.html', {
+        'user': request.user
+    })

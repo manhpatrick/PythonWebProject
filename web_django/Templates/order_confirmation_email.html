@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xác nhận đơn hàng</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background-color: #ee4d2d;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 5px 5px 0 0;
+        }
+        .content {
+            background-color: #f9f9f9;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-top: none;
+        }
+        .order-info {
+            background-color: white;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+            border-left: 4px solid #ee4d2d;
+        }
+        .order-info p {
+            margin: 8px 0;
+        }
+        .order-info strong {
+            color: #ee4d2d;
+        }
+        .product-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background-color: white;
+        }
+        .product-table th,
+        .product-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        .product-table th {
+            background-color: #ee4d2d;
+            color: white;
+        }
+        .total-section {
+            background-color: white;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+            text-align: right;
+        }
+        .total-section p {
+            margin: 8px 0;
+        }
+        .grand-total {
+            font-size: 1.2em;
+            color: #ee4d2d;
+            font-weight: bold;
+            padding-top: 10px;
+            border-top: 2px solid #ee4d2d;
+        }
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+            font-size: 0.9em;
+        }
+        .payment-method {
+            display: inline-block;
+            background-color: #fff3e0;
+            color: #f57c00;
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🎉 Đặt hàng thành công!</h1>
+        <p>Cảm ơn bạn đã mua sắm tại cửa hàng chúng tôi</p>
+    </div>
+    
+    <div class="content">
+        <h2>Xin chào {{ customer_name }},</h2>
+        <p>Đơn hàng của bạn đã được đặt thành công. Dưới đây là thông tin chi tiết:</p>
+        
+        <div class="order-info">
+            <p><strong>Mã đơn hàng:</strong> #{{ order_id }}</p>
+            <p><strong>Ngày đặt:</strong> {{ date_ordered }}</p>
+            <p><strong>Phương thức thanh toán:</strong> <span class="payment-method">{{ payment_method }}</span></p>
+        </div>
+        
+        <div class="order-info">
+            <h3 style="margin-top: 0; color: #ee4d2d;">📍 Thông tin giao hàng</h3>
+            <p><strong>Người nhận:</strong> {{ customer_name }}</p>
+            <p><strong>Số điện thoại:</strong> {{ customer_phone }}</p>
+            <p><strong>Địa chỉ:</strong> {{ shipping_address }}</p>
+            {% if note %}
+            <p><strong>Ghi chú:</strong> {{ note }}</p>
+            {% endif %}
+        </div>
+        
+        <h3 style="color: #ee4d2d;">📦 Chi tiết đơn hàng</h3>
+        <table class="product-table">
+            <thead>
+                <tr>
+                    <th>Sản phẩm</th>
+                    <th>Size</th>
+                    <th>Số lượng</th>
+                    <th>Đơn giá</th>
+                    <th>Thành tiền</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in order_items %}
+                <tr>
+                    <td>{{ item.product.name }}</td>
+                    <td>{{ item.size }}</td>
+                    <td>{{ item.quantity }}</td>
+                    <td>{{ item.product.new_price|floatformat:0 }}₫</td>
+                    <td>{{ item.get_total|floatformat:0 }}₫</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        
+        <div class="total-section">
+            <p><strong>Tạm tính:</strong> {{ cart_total|floatformat:0 }}₫</p>
+            {% if discount_amount > 0 %}
+            <p style="color: #27ae60;"><strong>Giảm giá:</strong> -{{ discount_amount|floatformat:0 }}₫</p>
+            {% endif %}
+            <p class="grand-total">Tổng cộng: {{ final_total|floatformat:0 }}₫</p>
+        </div>
+        
+        {% if payment_method == 'COD' %}
+        <div class="order-info" style="background-color: #fff9e6; border-left-color: #f57c00;">
+            <p style="margin: 0;"><strong>💵 Thanh toán khi nhận hàng (COD)</strong></p>
+            <p style="margin: 5px 0 0 0;">Vui lòng chuẩn bị số tiền <strong>{{ final_total|floatformat:0 }}₫</strong> khi nhận hàng.</p>
+        </div>
+        {% elif payment_method == 'BANK' %}
+        <div class="order-info" style="background-color: #e3f2fd; border-left-color: #2196f3;">
+            <p style="margin: 0;"><strong>🏦 Chuyển khoản ngân hàng</strong></p>
+            <p style="margin: 5px 0 0 0;">Vui lòng chuyển khoản theo thông tin đã cung cấp và gửi ảnh xác nhận cho chúng tôi.</p>
+        </div>
+        {% elif payment_method == 'EWALLET' %}
+        <div class="order-info" style="background-color: #f3e5f5; border-left-color: #9c27b0;">
+            <p style="margin: 0;"><strong>💳 Ví điện tử</strong></p>
+            <p style="margin: 5px 0 0 0;">Vui lòng thanh toán qua ví điện tử và gửi ảnh xác nhận cho chúng tôi.</p>
+        </div>
+        {% endif %}
+        
+        <p style="margin-top: 20px;">Nếu bạn có bất kỳ câu hỏi nào về đơn hàng, vui lòng liên hệ với chúng tôi qua email hoặc số điện thoại hỗ trợ.</p>
+        
+        <p><strong>Cảm ơn bạn đã tin tưởng và ủng hộ!</strong> 🙏</p>
+    </div>
+    
+    <div class="footer">
+        <p>Email này được gửi tự động, vui lòng không trả lời.</p>
+        <p>© 2025 Cửa hàng đồ thể thao. All rights reserved.</p>
+    </div>
+</body>
+</html>

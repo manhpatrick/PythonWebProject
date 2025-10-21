@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Đăng nhập thành công</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .container {
+            text-align: center;
+        }
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 4px solid white;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .close-btn {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background: white;
+            color: #667eea;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .close-btn:hover {
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>✓ Đăng nhập thành công!</h2>
+        <div class="spinner"></div>
+        <p>Đang đóng cửa sổ...</p>
+        <button class="close-btn" onclick="forceClose()">Đóng ngay</button>
+    </div>
+    
+    <script type="text/javascript">
+        console.log('[CALLBACK] Page loaded');
+        
+        // Tự động chạy khi page load xong
+        window.onload = function() {
+            console.log('[CALLBACK] Window loaded, reloading parent...');
+            
+            // Kiểm tra nếu có window opener (popup)
+            if (window.opener && !window.opener.closed) {
+                try {
+                    // Reload parent window
+                    window.opener.location.reload();
+                    console.log('[CALLBACK] Parent reloaded');
+                    
+                    // Đợi một chút rồi chuyển popup sang about:blank
+                    setTimeout(function() {
+                        // Trick: Chuyển sang about:blank thì có thể đóng được
+                        window.location.href = 'about:blank';
+                        
+                        // Đợi chút nữa rồi thử đóng
+                        setTimeout(function() {
+                            window.close();
+                        }, 100);
+                    }, 500);
+                    
+                } catch (e) {
+                    console.error('[CALLBACK] Error:', e);
+                    // Nếu không reload được, ít nhất hiện message
+                    document.body.innerHTML = '<div style="text-align:center;padding:50px;font-family:Arial;background:#667eea;color:white;height:100vh;display:flex;align-items:center;justify-content:center;"><div><h2>✓ Đăng nhập thành công!</h2><p>Vui lòng đóng cửa sổ này.</p></div></div>';
+                }
+            } else {
+                // Không phải popup, redirect về trang chủ
+                console.log('[CALLBACK] Not a popup, redirecting to home...');
+                window.location.href = '/';
+            }
+        };
+        
+        function forceClose() {
+            console.log('[CALLBACK] Manual close button clicked');
+            if (window.opener) {
+                window.opener.location.reload();
+            }
+            window.location.href = 'about:blank';
+            setTimeout(function() { window.close(); }, 100);
+        }
+    </script>
+</body>
+</html>

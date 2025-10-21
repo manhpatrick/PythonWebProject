@@ -1,0 +1,275 @@
+{% extends "index.html" %}
+{% load static %}
+{% load socialaccount %}
+
+{% block modal-signup %}
+<div class="modal">
+  <div class="modal__overlay"></div>
+  <div class="modal__body"> 
+    <div class="auth-form">
+      <div class="auth-form__container">
+        <div class="auth-form__header">
+          <h3 class="auth-form__heading">Hoàn tất đăng ký</h3>
+          <p class="auth-form__subheading">Chỉ còn một bước nữa thôi!</p>
+        </div>
+        
+        <!-- Display connected account info -->
+        <div class="social-account-info">
+          <div class="social-account-card">
+            <i class="fa-brands fa-google social-icon"></i>
+            <div class="social-account-details">
+              <p class="social-account-email">{{ form.email.value }}</p>
+              <p class="social-account-provider">Đã kết nối với Google</p>
+            </div>
+          </div>
+        </div>
+
+        <form method="POST" action="{% url 'socialaccount_signup' %}">
+          {% csrf_token %}
+          
+          <div class="auth-form__form">
+            <div class="auth-form__group">
+              <!-- Email field (pre-filled from Google) -->
+              <div class="form-field">
+                <label for="id_email" class="form-label">
+                  <i class="fa-solid fa-envelope"></i> Email
+                </label>
+                {{ form.email }}
+                <small class="form-hint">Email này sẽ được dùng để đăng nhập và nhận thông báo</small>
+              </div>
+              
+              <!-- Hidden username field (auto-generated) -->
+              <input type="hidden" name="username" value="{{ form.email.value }}">
+              
+              <div class="info-box">
+                <i class="fa-solid fa-circle-info"></i>
+                <p>Tên người dùng sẽ được tự động tạo từ email của bạn</p>
+              </div>
+            </div>
+
+            {% if form.errors %}
+              <div class="auth-messages">
+                {% if form.non_field_errors %}
+                  {% for error in form.non_field_errors %}
+                    <div class="auth-message error">
+                      {{ error }}
+                    </div>
+                  {% endfor %}
+                {% endif %}
+              </div>
+            {% endif %}
+
+            <div class="auth-form__policy">
+              <p class="auth-form__policy-text">
+                Bằng việc tiếp tục, bạn đã đồng ý với
+                <a href="{% url 'policy' %}" target="_blank" class="auth-form__policy-link">
+                  <span>Điều khoản dịch vụ</span>
+                </a>
+                &
+                <a href="{% url 'policy' %}" target="_blank" class="auth-form__policy-link">
+                  <span>Chính sách bảo mật</span>
+                </a>
+                của chúng tôi
+              </p>
+            </div>
+
+            <div class="auth-form__control">
+              <a href="{% url 'main' %}" class="btn btn--back">Hủy</a>
+              <button type="submit" class="btn btn--primary">
+                <i class="fa-solid fa-check"></i> Hoàn tất đăng ký
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+/* Social Account Info Styles */
+.auth-form__heading {
+  font-size: 28px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 8px;
+  text-align: center;
+}
+
+.auth-form__subheading {
+  font-size: 14px;
+  color: #666;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.social-account-info {
+  margin: 20px 0;
+}
+
+.social-account-card {
+  display: flex;
+  align-items: center;
+  padding: 15px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+  margin-bottom: 25px;
+}
+
+.social-icon {
+  font-size: 32px;
+  color: white;
+  margin-right: 15px;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 12px;
+  border-radius: 50%;
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.social-account-details {
+  flex: 1;
+}
+
+.social-account-email {
+  font-size: 16px;
+  font-weight: 600;
+  color: white;
+  margin: 0 0 4px 0;
+}
+
+.social-account-provider {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0;
+}
+
+/* Form Field Styles */
+.form-field {
+  margin-bottom: 20px;
+}
+
+.form-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.form-label i {
+  margin-right: 6px;
+  color: #667eea;
+}
+
+.form-hint {
+  display: block;
+  font-size: 12px;
+  color: #999;
+  margin-top: 6px;
+  font-style: italic;
+}
+
+.info-box {
+  display: flex;
+  align-items: center;
+  background: #e8f4fd;
+  border-left: 4px solid #2196F3;
+  padding: 12px 15px;
+  border-radius: 4px;
+  margin-top: 15px;
+}
+
+.info-box i {
+  font-size: 20px;
+  color: #2196F3;
+  margin-right: 12px;
+}
+
+.info-box p {
+  margin: 0;
+  font-size: 13px;
+  color: #0277BD;
+}
+
+.field-error {
+  background: #fee;
+  border-left: 3px solid #e74c3c;
+  padding: 8px 12px;
+  margin-top: 8px;
+  border-radius: 4px;
+}
+
+.field-error p {
+  margin: 0;
+  font-size: 13px;
+  color: #c0392b;
+}
+
+/* Style the form inputs */
+.auth-form__form input[type="text"],
+.auth-form__form input[type="email"] {
+  width: 100%;
+  padding: 12px 15px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+.auth-form__form input[type="text"]:focus,
+.auth-form__form input[type="email"]:focus {
+  border-color: #667eea;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+/* Button styles enhancement */
+.btn--primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  padding: 12px 24px;
+  font-weight: 600;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.btn--primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.btn--primary i {
+  margin-right: 8px;
+}
+
+/* Error message styling */
+.auth-message.error {
+  background: #fee;
+  border-left: 4px solid #e74c3c;
+  padding: 12px 15px;
+  margin-bottom: 15px;
+  border-radius: 4px;
+  color: #c0392b;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .social-account-card {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .social-icon {
+    margin: 0 0 12px 0;
+  }
+  
+  .auth-form__heading {
+    font-size: 24px;
+  }
+}
+</style>
+{% endblock %}

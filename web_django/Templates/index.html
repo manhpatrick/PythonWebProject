@@ -22,9 +22,6 @@
     ></script>
 </head>
 <body>
-    <!-- Messages Display -->
-    {% include 'partials/messages.html' %}
-    
     <div class="header">
       <div class="grid">
         <!-- Header navbar -->
@@ -118,7 +115,7 @@
             <li class="header__nav-item">
               <a href="" class="header__nav-item-link">
                 <i class="header__navbar-icon fa-solid fa-circle-user"></i>
-                  <span class="user-name">{{ request.session.accountname }}</span>
+                  <span class="user-name">{{ user_display_name }}</span>
               </a>
               <ul class="header__user-menu">
                 <li class="header__user-item">
@@ -152,15 +149,23 @@
           <div class="header__logo">
             <img src="{% static 'css/image/web-logo.png' %}" alt="" class="header__logo-img" />
           </div>
-          <form action="{% url 'search' %}" method="get" class="header__search-bar">
+          <form action="{% url 'search' %}" method="get" class="header__search-bar" id="searchForm">
             <div class="header__search-input-wrap">
               <input
                 type="text"
                 name="searched"
+                id="searchInput"
                 class="header__search-input"
                 placeholder="Nhập để tìm kiếm sản phẩm"
                 value="{{ searched|default:'' }}"
+                autocomplete="off"
               />
+              <!-- Dropdown lịch sử tìm kiếm -->
+              <div class="search-history-dropdown" id="searchHistoryDropdown" style="display: none;">
+                <ul class="search-history-list" id="searchHistoryList">
+                  <!-- Items sẽ được thêm bằng JavaScript -->
+                </ul>
+              </div>
             </div>
             <button type="submit" class="header__search-btn">
               <i class="header__search-icon fa-solid fa-magnifying-glass"></i>
@@ -182,14 +187,12 @@
                             <img src="{% static 'image/test.jpg' %}" alt="{{ item.product.name }}" class="header__cart-img">
                         {% endif %}
                         <div class="header__cart-item-info">
-                            <div class="header__cart-item-head">
-                                <h5 class="header__cart-item-name">{{ item.product.name|truncatechars:15 }}</h5>
-                                <div class="header__cart-price-wrap">
-                                    <span class="header__cart-item-price">{{ item.product.new_price|floatformat:0|intcomma }}đ</span>
-                                    <span class="header__cart-item-multiply">x</span>
-                                    <span class="header__cart-item-number">{{ item.quantity }}</span>
-                                </div>
-                            </div>
+                            <h5 class="header__cart-item-name">{{ item.product.name|truncatechars:30 }}</h5>
+                            <div class="header__cart-item-size">Size: {{ item.size }}</div>
+                        </div>
+                        <div class="header__cart-item-right">
+                            <span class="header__cart-item-price">{{ item.product.new_price|floatformat:0|intcomma }}đ</span>
+                            <span class="header__cart-item-multiply">x{{ item.quantity }}</span>
                         </div>
                     </li>
                     {% endfor %}
@@ -440,6 +443,8 @@
   // =============================
   // MỞ POPUP SẢN PHẨM
   // =============================
+  let selectedSize = 'L'; // Mặc định chọn size L
+  
   function openProductModal(productId) {
     fetch(`/api/product/${productId}/`)
       .then(res => res.json())
@@ -457,18 +462,62 @@
         document.getElementById('modalProductNewPrice').textContent = data.new_price.toLocaleString() + "đ";
         document.getElementById('modalProductOldPrice').textContent = data.old_price ? data.old_price.toLocaleString() + "đ" : '';
         document.getElementById('modalProductDiscount').textContent = data.discount_percent ? `-${data.discount_percent}%` : '';
-        document.getElementById('modalProductDetail').textContent = data.detail;
+        document.getElementById('modalProductDetail').textContent = data.detail || 'Chưa có mô tả chi tiết';
         document.getElementById('modalProductSoldCount').textContent = data.sold_number;
         document.getElementById('modalProductRating').textContent = data.rating + "/5";
         document.getElementById("modalProductStars").innerHTML = renderStars(data.rating);
-        // reset lại số lượng
+        
+        // Cập nhật size options
+        updateSizeOptions(data.available_sizes || 'S,M,L,XL');
+        
+        // reset lại số lượng và size
         productQuantity = 1;
+        selectedSize = 'L';
         document.getElementById('productQuantity').value = 1;
 
         openCartModal();
       })
       .catch(err => console.error(err));
   }
+  
+  // =============================
+  // CẬP NHẬT SIZE OPTIONS
+  // =============================
+  function updateSizeOptions(availableSizes) {
+    const sizeArray = availableSizes.split(',').map(s => s.trim());
+    const sizeOptions = document.getElementById('sizeOptions');
+    
+    if (sizeOptions) {
+      const allSizes = ['S', 'M', 'L', 'XL'];
+      sizeOptions.innerHTML = '';
+      
+      allSizes.forEach(size => {
+        const btn = document.createElement('button');
+        btn.className = 'size-btn';
+        btn.setAttribute('data-size', size);
+        btn.textContent = size;
+        
+        if (!sizeArray.includes(size)) {
+          btn.disabled = true;
+        }
+        
+        if (size === selectedSize && sizeArray.includes(size)) {
+          btn.classList.add('active');
+        }
+        
+        btn.onclick = function() {
+          if (!this.disabled) {
+            document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            selectedSize = this.getAttribute('data-size');
+          }
+        };
+        
+        sizeOptions.appendChild(btn);
+      });
+    }
+  }
+  
   // =============================
   // RENDER SAO
   // =============================
@@ -509,6 +558,7 @@
 
         const quantity = parseInt(quantityInput.value) || 1;
         console.log("Quantity:", quantity);
+        console.log("Selected Size:", selectedSize);
 
         // Kiểm tra token
         if (!csrftoken) {
@@ -533,7 +583,7 @@
                 'X-CSRFToken': csrftoken,
                 'X-Requested-With': 'XMLHttpRequest',
             },
-            body: `product_id=${encodeURIComponent(currentProductId)}&quantity=${encodeURIComponent(quantity)}`
+            body: `product_id=${encodeURIComponent(currentProductId)}&quantity=${encodeURIComponent(quantity)}&size=${encodeURIComponent(selectedSize)}`
         });
 
         console.log("Response Status:", response.status, response.statusText);
@@ -604,5 +654,185 @@
           }
       }
   }
+
+  // =============================
+  // LỊCH SỬ TÌM KIẾM
+  // =============================
+  const SEARCH_HISTORY_KEY = 'searchHistory';
+  const MAX_HISTORY_ITEMS = 10;
+
+  // Lấy lịch sử từ LocalStorage
+  function getSearchHistory() {
+      const history = localStorage.getItem(SEARCH_HISTORY_KEY);
+      return history ? JSON.parse(history) : [];
+  }
+
+  // Lưu lịch sử vào LocalStorage
+  function saveSearchHistory(history) {
+      localStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(history));
+  }
+
+  // Thêm từ khóa vào lịch sử
+  function addToSearchHistory(keyword) {
+      if (!keyword || keyword.trim() === '') return;
+      
+      let history = getSearchHistory();
+      
+      // Loại bỏ từ khóa cũ nếu đã tồn tại
+      history = history.filter(item => item.toLowerCase() !== keyword.toLowerCase());
+      
+      // Thêm từ khóa mới vào đầu
+      history.unshift(keyword.trim());
+      
+      // Giới hạn số lượng
+      if (history.length > MAX_HISTORY_ITEMS) {
+          history = history.slice(0, MAX_HISTORY_ITEMS);
+      }
+      
+      saveSearchHistory(history);
+  }
+
+  // Xóa một item khỏi lịch sử
+  function removeFromSearchHistory(keyword) {
+      let history = getSearchHistory();
+      history = history.filter(item => item !== keyword);
+      saveSearchHistory(history);
+      renderSearchHistory();
+  }
+
+  // Xóa toàn bộ lịch sử
+  function clearAllSearchHistory() {
+      localStorage.removeItem(SEARCH_HISTORY_KEY);
+      renderSearchHistory();
+  }
+
+  // Hiển thị lịch sử tìm kiếm
+  function renderSearchHistory() {
+      const history = getSearchHistory();
+      const historyList = document.getElementById('searchHistoryList');
+      const historyDropdown = document.getElementById('searchHistoryDropdown');
+      
+      if (!historyList) return;
+      
+      historyList.innerHTML = '';
+      
+      if (history.length === 0) {
+          // Ẩn dropdown khi không có lịch sử
+          if (historyDropdown) historyDropdown.style.display = 'none';
+      } else {
+          history.forEach(keyword => {
+              const li = document.createElement('li');
+              li.className = 'search-history-item';
+              
+              li.innerHTML = `
+                  <button type="button" class="search-history-keyword" data-keyword="${keyword}">
+                      <i class="fas fa-clock"></i>
+                      <span>${keyword}</span>
+                  </button>
+                  <button type="button" class="search-history-remove" data-keyword="${keyword}">
+                      <i class="fas fa-times"></i>
+                  </button>
+              `;
+              
+              historyList.appendChild(li);
+          });
+      }
+  }
+
+  // Xử lý sự kiện cho dropdown
+  const searchInput = document.getElementById('searchInput');
+  const searchHistoryDropdown = document.getElementById('searchHistoryDropdown');
+  const searchForm = document.getElementById('searchForm');
+
+  if (searchInput && searchHistoryDropdown) {
+      // Hiển thị dropdown khi focus (chỉ khi có lịch sử)
+      searchInput.addEventListener('focus', function() {
+          const history = getSearchHistory();
+          if (history.length > 0) {
+              renderSearchHistory();
+              searchHistoryDropdown.style.display = 'block';
+          }
+      });
+
+      // Ẩn dropdown khi click ra ngoài
+      document.addEventListener('click', function(e) {
+          if (!searchInput.contains(e.target) && !searchHistoryDropdown.contains(e.target)) {
+              searchHistoryDropdown.style.display = 'none';
+          }
+      });
+
+      // Xử lý click vào từ khóa trong lịch sử
+      searchHistoryDropdown.addEventListener('click', function(e) {
+          const keywordBtn = e.target.closest('.search-history-keyword');
+          const removeBtn = e.target.closest('.search-history-remove');
+          
+          if (keywordBtn) {
+              const keyword = keywordBtn.dataset.keyword;
+              searchInput.value = keyword;
+              searchHistoryDropdown.style.display = 'none';
+              searchForm.submit();
+          } else if (removeBtn) {
+              const keyword = removeBtn.dataset.keyword;
+              removeFromSearchHistory(keyword);
+          }
+      });
+  }
+
+  // Lưu từ khóa khi submit form
+  if (searchForm) {
+      searchForm.addEventListener('submit', function(e) {
+          const keyword = searchInput.value.trim();
+          if (keyword) {
+              addToSearchHistory(keyword);
+          }
+      });
+  }
+
+  // Tự động lưu từ khóa hiện tại (nếu đang ở trang search)
+  {% if searched %}
+  addToSearchHistory("{{ searched|escapejs }}");
+  {% endif %}
+
+  // Tự động đóng popup OAuth nếu đang trong popup window
+  if (window.opener && !window.opener.closed && window.name === 'Google Login') {
+    const isAuthenticated = {{ user.is_authenticated|yesno:"true,false" }};
+    if (isAuthenticated) {
+      console.log('[POPUP] User authenticated, attempting to close...');
+      
+      // Thử đóng popup nhiều lần
+      let attempts = 0;
+      const maxAttempts = 20;
+      
+      const tryClose = setInterval(function() {
+        attempts++;
+        console.log('[POPUP] Close attempt #' + attempts);
+        
+        // Thử đóng window
+        window.close();
+        
+        // Nếu thử quá nhiều lần, redirect parent
+        if (attempts >= maxAttempts) {
+          clearInterval(tryClose);
+          console.log('[POPUP] Cannot close, redirecting parent window...');
+          
+          try {
+            window.opener.location.reload();
+            // Đợi parent reload xong rồi thử đóng lại
+            setTimeout(function() {
+              window.close();
+            }, 500);
+          } catch (e) {
+            console.error('[POPUP] Cannot redirect parent:', e);
+            // Last resort: hiển thị message để user tự đóng
+            document.body.innerHTML = '<div style="text-align:center;padding:50px;font-family:Arial;"><h2>✓ Đăng nhập thành công!</h2><p>Vui lòng đóng cửa sổ này.</p><button onclick="window.close()" style="padding:10px 20px;font-size:16px;cursor:pointer;">Đóng</button></div>';
+          }
+        }
+      }, 100);
+    }
+  }
 </script>
+
+<!-- Chatbot Widget -->
+{% include 'partials/chatbot.html' %}
+
 </html>

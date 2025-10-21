@@ -27,7 +27,9 @@ urlpatterns = [
     path('', include('product.urls')),
     path('order/', include('order.urls')),
     path('purchase/', include('purchase.urls')),
+    path('chatbot/', include('chatbot.urls')),
     path('add-to-cart/', order_views.add_to_cart, name='add_to_cart'),
+    path('accounts/', include('allauth.urls')),
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -47,10 +47,24 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.humanize',
     'django.contrib.staticfiles',
+    'django.contrib.sites',
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.google',
+    'allauth.socialaccount.providers.facebook',
     'authentication',
     'product',
     'order',
     'purchase',
+    'chatbot',
+]
+
+SITE_ID = 1
+
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+    'allauth.account.auth_backends.AuthenticationBackend',
 ]
 
 MIDDLEWARE = [
@@ -62,6 +76,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
+    'allauth.account.middleware.AccountMiddleware',
 ]
 
 ROOT_URLCONF = 'web1.urls'
@@ -78,6 +93,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'product.context_processors.products_context',
                 'web1.context_processors.next_url_processor',
+                'web1.context_processors.user_display_name',
             ],
         },
     },
@@ -146,3 +162,31 @@ STATICFILES_DIRS = [
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# Cấu hình đăng nhập
+LOGIN_REDIRECT_URL = '/'  # Redirect về trang chủ sau khi đăng nhập
+ACCOUNT_LOGOUT_REDIRECT_URL = '/'
+
+# Cấu hình allauth adapters
+SOCIALACCOUNT_ADAPTER = 'authentication.adapters.CustomSocialAccountAdapter'
+
+# Cấu hình allauth (cập nhật theo phiên bản mới)
+ACCOUNT_LOGIN_METHODS = {'email'}  # Dùng email để đăng nhập
+ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*', 'password2*']  # Chỉ yêu cầu email và password
+SOCIALACCOUNT_AUTO_SIGNUP = False  # TẮTT tự động signup - bắt buộc phải qua trang xác nhận
+SOCIALACCOUNT_EMAIL_AUTHENTICATION = True  # Dùng email làm phương thức chính
+SOCIALACCOUNT_QUERY_EMAIL = True  # Yêu cầu email từ provider
+SOCIALACCOUNT_LOGIN_ON_GET = True  # Đăng nhập tự động mà không cần confirm
+
+# Cấu hình providers
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {
+        'SCOPE': [
+            'profile',
+            'email',
+        ],
+        'AUTH_PARAMS': {
+            'access_type': 'online',
+            'prompt': 'select_account',  # BẮT BUỘC hiện popup chọn tài khoản Google
+        }
+    }
+}

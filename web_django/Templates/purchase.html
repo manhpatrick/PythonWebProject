@@ -10,9 +10,6 @@
     <link rel="stylesheet" href="{% static 'css/purchase.css' %}">
 </head>
 <body>
-    <!-- Messages Display -->
-    {% include 'partials/messages.html' %}
-    
     <div class="container">
         <div class="max-w-6xl">
             <!-- Progress Bar -->
@@ -56,9 +53,9 @@
                                             <div>
                                                 <h3 class="item-name">{{ item.product.name }}</h3>
                                                 <p class="item-variant">{{ item.product.brand }} - {{ item.product.country }}</p>
-                                                <p class="item-sku">Mã: {{ item.product.id }}</p>
+                                                <p class="item-sku">Mã: {{ item.product.id }} | Size: <span style="font-weight: 600; color: #ee4d2d;">{{ item.size }}</span></p>
                                             </div>
-                                            <button class="delete-btn" data-product="{{ item.product.id }}" data-action="delete">
+                                            <button class="delete-btn" data-item="{{ item.id }}" data-action="delete">
                                                 <i class="fas fa-trash" style="font-size: 1rem;"></i>
                                             </button>
                                         </div>
@@ -90,9 +87,9 @@
                                             <div class="quantity-control">
                                                 <span class="qty-label">Số lượng:</span>
                                                 <div class="qty-buttons">
-                                                    <button class="qty-btn" data-product="{{ item.product.id }}" data-action="remove">−</button>
+                                                    <button class="qty-btn" data-item="{{ item.id }}" data-action="remove">−</button>
                                                     <span class="qty-number">{{ item.quantity }}</span>
-                                                    <button class="qty-btn" data-product="{{ item.product.id }}" data-action="add">+</button>
+                                                    <button class="qty-btn" data-item="{{ item.id }}" data-action="add">+</button>
                                                 </div>
                                             </div>
                                         </div>
@@ -288,7 +285,7 @@
                                     </div>
                                     <div class="item-info-small">
                                         <div class="item-name-small">{{ item.product.name }}</div>
-                                        <div class="item-variant-small">{{ item.product.brand }} - {{ item.product.country }}</div>
+                                        <div class="item-variant-small">{{ item.product.brand }} - {{ item.product.country }} | Size: {{ item.size }}</div>
                                         <div class="item-price-small">
                                             {% if item.product.new_price %}
                                             {{ item.product.new_price|intcomma }}đ × {{ item.quantity }}
@@ -465,35 +462,64 @@
         document.addEventListener('click', function(e) {
             if (e.target.classList.contains('qty-btn') || e.target.closest('.qty-btn')) {
                 const btn = e.target.closest('.qty-btn') || e.target;
-                let productId = btn.dataset.product;
+                let itemId = btn.dataset.item;
                 let action = btn.dataset.action;
-                console.log('Product:', productId, 'Action:', action);
+                console.log('Item:', itemId, 'Action:', action);
 
-                // Gọi API Django của bạn ở đây
-                /*
-                fetch('/update_item/', {
+                // Gọi API Django để cập nhật số lượng
+                fetch('/order/update_item/', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'X-CSRFToken': getCookie('csrftoken'),
                     },
-                    body: JSON.stringify({ 'productId': productId, 'action': action })
+                    body: JSON.stringify({ 'itemId': itemId, 'action': action })
                 })
                 .then(response => response.json())
                 .then(data => {
                     console.log('Updated:', data);
-                    location.reload();
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert(data.error || 'Có lỗi xảy ra!');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Có lỗi xảy ra khi cập nhật giỏ hàng!');
                 });
-                */
             }
 
             // Delete button
             if (e.target.classList.contains('delete-btn') || e.target.closest('.delete-btn')) {
                 const btn = e.target.closest('.delete-btn') || e.target;
-                let productId = btn.dataset.product;
-                console.log('Delete product:', productId);
+                let itemId = btn.dataset.item;
+                console.log('Delete item:', itemId);
                 
-                // Gọi API xóa ở đây
+                if (confirm('Bạn có chắc muốn xóa sản phẩm này khỏi giỏ hàng?')) {
+                    // Gọi API xóa
+                    fetch('/order/update_item/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': getCookie('csrftoken'),
+                        },
+                        body: JSON.stringify({ 'itemId': itemId, 'action': 'delete' })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log('Deleted:', data);
+                        if (data.success) {
+                            location.reload();
+                        } else {
+                            alert(data.error || 'Có lỗi xảy ra!');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Có lỗi xảy ra khi xóa sản phẩm!');
+                    });
+                }
             }
         });
 

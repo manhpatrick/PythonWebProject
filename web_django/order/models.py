@@ -73,17 +73,24 @@ class Order(models.Model):
         return total
 
 class OrderItem(models.Model):
+    SIZE_CHOICES = [
+        ('S', 'Size S'),
+        ('M', 'Size M'),
+        ('L', 'Size L'),
+        ('XL', 'Size XL'),
+    ]
+    
     product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True)
     order = models.ForeignKey(Order, on_delete=models.CASCADE, null=True, blank=True)
     quantity = models.IntegerField(default=0, null=True, blank=True)
+    size = models.CharField(max_length=5, choices=SIZE_CHOICES, default='M')
     date_added = models.DateTimeField(auto_now_add=True)  # ← Quan trọng!
 
     @property
     def get_total(self):
-        if self.product.new_price:
-            return self.product.new_price * self.quantity
-        else:
-            return self.product.old_price * self.quantity
+        # Dùng new_price nếu có và > 0, không thì dùng old_price
+        price = self.product.new_price if (self.product.new_price and self.product.new_price > 0) else self.product.old_price
+        return price * self.quantity
 
     def __str__(self):
         return f"{self.quantity} x {self.product.name}"

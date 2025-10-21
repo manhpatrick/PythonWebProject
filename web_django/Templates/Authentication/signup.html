@@ -1,5 +1,6 @@
 {% extends "index.html" %}
 {% load static %}
+{% load socialaccount %}
 <!-- Modal -->
 {% block modal-signup %}
   <div class="modal">
@@ -46,9 +47,9 @@
                 />
               </div>
               {% if messages %}
-                <div class="messages">
+                <div class="auth-messages">
                   {% for message in messages %}
-                    <div class="message {{ message.tags }}">
+                    <div class="auth-message {{ message.tags }}">
                       {{ message }}
                     </div>
                   {% endfor %}
@@ -79,16 +80,68 @@
           </form>
         </div>
         <div class="auth-form__social">
-          <a href="" class="btn btn-with-fb-icon">
-            <i class="auth__icon fa-brands fa-square-facebook"></i>
-            <span class="auth__title"> Đăng nhập với Facebook </span>
-          </a>
-          <a href="" class="btn btn-with-gg-icon">
+          <a href="{% provider_login_url 'google' %}" class="btn btn-with-gg-icon" onclick="openGooglePopup(event)">
             <i class="auth__icon fa-brands fa-google"></i>
-            <span class="auth__title"> Đăng nhập với Google </span>
+            <span class="auth__title"> Đăng ký với Google </span>
           </a>
         </div>
       </div>
     </div>
   </div>  
+
+<script>
+function openGooglePopup(event) {
+  event.preventDefault();
+  
+  const googleUrl = event.currentTarget.href;
+  const width = 500;
+  const height = 650;
+  const left = (screen.width - width) / 2;
+  const top = (screen.height - height) / 2;
+  
+  const popup = window.open(
+    googleUrl,
+    'Google Login',
+    `width=${width},height=${height},left=${left},top=${top},toolbar=no,menubar=no,scrollbars=yes,resizable=yes,status=no,location=no`
+  );
+  
+  // Đơn giản: Chỉ cần check khi popup đóng, sau đó reload
+  const checkPopup = setInterval(function() {
+    if (!popup || popup.closed) {
+      clearInterval(checkPopup);
+      
+      console.log('[PARENT] Popup closed, reloading page...');
+      
+      // Đóng modal đăng ký
+      const modal = document.querySelector('.modal');
+      if (modal) {
+        modal.style.display = 'none';
+      }
+      
+      // Reload trang sau 300ms để đảm bảo session đã được lưu
+      setTimeout(function() {
+        window.location.reload();
+      }, 300);
+    }
+  }, 300);
+  
+  // Focus vào popup
+  if (popup) {
+    popup.focus();
+  }
+}
+</script>
+      
+      // Reload trang chính để cập nhật trạng thái đăng nhập
+      window.location.href = '/';
+    }
+  }, 300);
+  
+  // Focus vào popup
+  if (popup) {
+    popup.focus();
+  }
+}
+</script>
+
 {% endblock %}

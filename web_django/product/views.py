@@ -64,7 +64,8 @@ def get_product_detail(request, product_id):
         'image': product.imageURL,
         'country': product.country,
         'brand': product.brand,
-        'detail': product.detail
+        'detail': product.detail,
+        'available_sizes': product.available_sizes
     }
     return JsonResponse(data)
 def render_stars_home(rating):

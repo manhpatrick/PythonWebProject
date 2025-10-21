@@ -20,12 +20,20 @@ def add_to_cart(request):
     try:
         product_id = request.POST.get('product_id')
         quantity = int(request.POST.get('quantity', 1))
+        size = request.POST.get('size', 'M')  # Lấy size từ request
+        
         if not product_id:
             return JsonResponse({'success': False, 'error': 'Thiếu product_id'})
 
         product = Product.objects.get(id=product_id)
         order, _ = Order.objects.get_or_create(customer=request.user, complete=False)
-        order_item, created = OrderItem.objects.get_or_create(order=order, product=product)
+        
+        # Kiểm tra xem đã có OrderItem với cùng product và size chưa
+        order_item, created = OrderItem.objects.get_or_create(
+            order=order, 
+            product=product,
+            size=size
+        )
 
         if created:
             order_item.quantity = quantity
@@ -38,7 +46,7 @@ def add_to_cart(request):
             'success': True,
             'cartItems': order.get_cart_items,
             'cartTotal': order.get_cart_total,
-            'message': f'Đã thêm {product.name} vào giỏ hàng!',
+            'message': f'Đã thêm {product.name} (Size {size}) vào giỏ hàng!',
         })
 
     except Product.DoesNotExist:
@@ -46,29 +54,66 @@ def add_to_cart(request):
     except Exception as e:
         return JsonResponse({'success': False, 'error': f'Lỗi: {str(e)}'})
 
+@csrf_exempt
 def updateItem(request):
-    data = json.loads(request.body)
-    productId = data['productId']
-    action = data['action']
+    if not request.user.is_authenticated:
+        return JsonResponse({'success': False, 'error': 'Vui lòng đăng nhập'}, status=401)
+    
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Method not allowed'}, status=405)
+    
+    try:
+        data = json.loads(request.body)
+        item_id = data.get('itemId')
+        action = data.get('action')
 
-    customer = request.user
-    product = Product.objects.get(id=productId)
-    order, _ = Order.objects.get_or_create(customer=customer, complete=False)
-    orderItem, created = OrderItem.objects.get_or_create(order=order, product=product)
+        if not item_id or not action:
+            return JsonResponse({'success': False, 'error': 'Thiếu thông tin'})
 
-    if action == 'add':
-        orderItem.quantity += 1
-    elif action == 'remove':
-        orderItem.quantity -= 1
-    elif action == 'delete':
-        orderItem.delete()
-        return JsonResponse({'message': 'Item deleted'}, safe=False)
+        # Lấy OrderItem theo ID và đảm bảo thuộc về user hiện tại
+        orderItem = OrderItem.objects.get(id=item_id, order__customer=request.user, order__complete=False)
 
-    orderItem.save()
-    if orderItem.quantity <= 0:
-        orderItem.delete()
+        if action == 'add':
+            orderItem.quantity += 1
+            orderItem.save()
+        elif action == 'remove':
+            orderItem.quantity -= 1
+            if orderItem.quantity <= 0:
+                orderItem.delete()
+                return JsonResponse({
+                    'success': True,
+                    'deleted': True,
+                    'cartItems': orderItem.order.get_cart_items,
+                    'cartTotal': orderItem.order.get_cart_total,
+                    'message': 'Đã xóa sản phẩm khỏi giỏ hàng'
+                })
+            else:
+                orderItem.save()
+        elif action == 'delete':
+            order = orderItem.order
+            orderItem.delete()
+            return JsonResponse({
+                'success': True,
+                'deleted': True,
+                'cartItems': order.get_cart_items,
+                'cartTotal': order.get_cart_total,
+                'message': 'Đã xóa sản phẩm khỏi giỏ hàng'
+            })
+        else:
+            return JsonResponse({'success': False, 'error': 'Action không hợp lệ'})
 
-    return JsonResponse('Item was updated', safe=False)
+        return JsonResponse({
+            'success': True,
+            'quantity': orderItem.quantity,
+            'cartItems': orderItem.order.get_cart_items,
+            'cartTotal': orderItem.order.get_cart_total,
+            'message': 'Đã cập nhật giỏ hàng'
+        })
+
+    except OrderItem.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Sản phẩm không tồn tại trong giỏ hàng'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': f'Lỗi: {str(e)}'})
 
 @login_required
 def apply_coupon(request):

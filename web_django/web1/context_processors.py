@@ -16,3 +16,29 @@ def next_url_processor(request):
     return {
         'current_full_path': full_path,
     }
+
+def user_display_name(request):
+    """
+    Context processor để lấy tên hiển thị của user
+    """
+    display_name = "Khách"
+    
+    if request.user.is_authenticated:
+        user = request.user
+        
+        # Thứ tự ưu tiên: full_name > username từ email > username
+        try:
+            if hasattr(user, 'profile') and user.profile.full_name:
+                display_name = user.profile.full_name
+            elif user.email:
+                display_name = user.email.split('@')[0]
+            elif user.username:
+                display_name = user.username
+            else:
+                display_name = "Người dùng"
+        except:
+            display_name = user.username if user.username else "Người dùng"
+    
+    return {
+        'user_display_name': display_name,
+    }
